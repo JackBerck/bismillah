@@ -23,7 +23,7 @@ val Typography = Typography(
     titleLarge = TextStyle(
         fontFamily = Poppins,
         fontWeight = FontWeight.Bold,
-        fontSize = 32.sp,
+        fontSize = 28.sp,
         lineHeight = 40.sp, // Opsional: Atur jarak antar baris
         letterSpacing = 0.sp // Opsional: Atur jarak antar huruf
     ),
