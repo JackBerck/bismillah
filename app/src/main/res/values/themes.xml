@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="Theme.WarasIn" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <!-- ===================== -->
+    <!--   STYLE TEKS KUSTOM -->
+    <!-- ===================== -->
+
+    <!-- Style Dasar untuk Teks -->
+    <style name="BaseTextStyle">
+        <item name="android:textColor">@color/gray_950</item>
+        <item name="android:fontFamily">@font/poppins_regular</item>
+        <item name="android:textSize">16sp</item>
+    </style>
+
+    <!-- Style untuk Judul Besar (H1, Title Large) -->
+    <style name="TitleLargeTextStyle" parent="BaseTextStyle">
+        <item name="android:textSize">32sp</item>
+        <item name="android:fontFamily">@font/poppins_bold</item>
+    </style>
+
+    <!-- Style untuk Judul Sedang (H2, Title Medium) -->
+    <style name="TitleMediumTextStyle" parent="BaseTextStyle">
+        <item name="android:textSize">24sp</item>
+        <item name="android:fontFamily">@font/poppins_bold</item>
+    </style>
+
+    <!-- Style untuk Subjudul (Subtitle) -->
+    <style name="SubtitleTextStyle" parent="BaseTextStyle">
+        <item name="android:textSize">20sp</item>
+        <item name="android:fontFamily">@font/poppins_semibold</item>
+    </style>
+
+    <!-- Style untuk Teks Paragraf (Body) -->
+    <style name="BodyTextStyle" parent="BaseTextStyle">
+        <item name="android:textSize">16sp</item>
+    </style>
+
+    <!-- Style untuk Teks Kecil (Small/Caption) -->
+    <style name="SmallTextStyle" parent="BaseTextStyle">
+        <item name="android:textSize">14sp</item>
+    </style>
+</resources>
