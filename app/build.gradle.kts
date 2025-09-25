@@ -90,4 +90,7 @@ dependencies {
     implementation("androidx.compose.runtime:runtime-livedata")
     // Optional - Integration with RxJava
     implementation("androidx.compose.runtime:runtime-rxjava2")
+
+    // Data Store for storing user preferences
+    implementation("androidx.datastore:datastore-preferences:1.0.0")
 }

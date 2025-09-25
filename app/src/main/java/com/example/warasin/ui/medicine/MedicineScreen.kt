@@ -41,92 +41,10 @@ import com.example.warasin.ui.theme.Gray300
 import com.example.warasin.ui.theme.Gray50
 import com.example.warasin.ui.theme.WarasInTheme
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.setValue
-
-
-data class Medicine(
-    val id: Int,
-    val name: String,
-    val dosage: String,
-    val frequency: String,
-    val description: String
-)
-
-@Composable
-fun MedicineDetailDialog(
-    medicine: Medicine,
-    onDismiss: () -> Unit // Lambda untuk menutup dialog
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Text(
-                text = medicine.name,
-                style = MaterialTheme.typography.titleLarge
-            )
-        },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Dosis: ${medicine.dosage}")
-                Text("Frekuensi: ${medicine.frequency}")
-                Spacer(modifier = Modifier.size(8.dp))
-                Text(medicine.description)
-            }
-        },
-        confirmButton = {
-            TextButton (onClick = onDismiss) {
-                Text("Tutup")
-            }
-        }
-    )
-}
-
-@Composable
-fun MedicineItem(
-    medicine: Medicine,
-    onClick: () -> Unit // Lambda untuk menangani klik
-) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .border(1.dp, Gray300, RoundedCornerShape(8.dp))
-            .clickable(onClick = onClick) // <-- BUAT BOX INI BISA DIKLIK
-    ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            horizontalArrangement = Arrangement.Start,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                painter = painterResource(id = R.drawable.outline_pill_24),
-                contentDescription = null,
-                tint = Blue600,
-                modifier = Modifier
-                    .size(64.dp)
-                    .padding(12.dp)
-                    .align(Alignment.CenterVertically)
-                    .background(Blue100, RoundedCornerShape(8.dp)),
-            )
-            Spacer(modifier = Modifier.width(16.dp))
-            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(
-                    text = medicine.name,
-                    style = MaterialTheme.typography.titleMedium,
-                )
-                Text(
-                    text = "Dosis: ${medicine.dosage}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Text(
-                    text = "Frekuensi: ${medicine.frequency}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-    }
-}
+import com.example.warasin.data.model.Medicine
+import com.example.warasin.ui.medicine.AddMedicineDialog
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -137,11 +55,21 @@ fun MedicineScreen(
     var showDialog by remember { mutableStateOf(false) }
     var selectedMedicine by remember { mutableStateOf<Medicine?>(null) }
 
-    val medicines = listOf(
-        Medicine(1, "Paracetamol", "500mg", "3 kali sehari", "Obat ini digunakan untuk meredakan demam dan nyeri ringan hingga sedang."),
-        Medicine(2, "Amoxicillin", "250mg", "2 kali sehari", "Antibiotik untuk mengobati infeksi bakteri. Harus dihabiskan."),
-        Medicine(3, "Vitamin C", "1000mg", "1 kali sehari", "Suplemen untuk menjaga daya tahan tubuh.")
-    )
+    // --- STATE BARU UNTUK FORM TAMBAH OBAT ---
+    var showAddDialog by remember { mutableStateOf(false) }
+
+    // State untuk setiap field di dalam form
+    var medicineName by remember { mutableStateOf("") }
+    var medicineDosage by remember { mutableStateOf("") }
+    var medicineNotes by remember { mutableStateOf("") }
+
+    val medicines = remember {
+        mutableStateListOf(
+            Medicine(1, "Paracetamol", "500mg", listOf("09:00", "15:00"), "Obat ini digunakan untuk meredakan demam dan nyeri ringan hingga sedang."),
+            Medicine(2, "Amoxicillin", "250mg", listOf("08:00", "20:00"), "Antibiotik untuk mengobati infeksi bakteri. Harus dihabiskan."),
+            Medicine(3, "Vitamin C", "1000mg", listOf("07:00"), "Suplemen untuk menjaga daya tahan tubuh.")
+        )
+    }
 
     // PENTING: Bungkus semua konten dengan Box
     Box(
@@ -161,7 +89,7 @@ fun MedicineScreen(
                     style = MaterialTheme.typography.titleLarge,
                 )
                 Button(
-                    onClick = { /*TODO*/ },
+                    onClick = { showAddDialog = true }, // Tampilkan dialog tambah
                     shape = RoundedCornerShape(8.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Blue600),
                 ) {
@@ -200,6 +128,28 @@ fun MedicineScreen(
                 onDismiss = {
                     showDialog = false
                     selectedMedicine = null
+                }
+            )
+        }
+
+        // --- PANGGIL DIALOG TAMBAH DI SINI ---
+        if (showAddDialog) {
+            AddMedicineDialog(
+                onDismiss = { showAddDialog = false },
+                onSave = { name, dosage, time, notes ->
+                    // Tambahkan obat baru ke dalam list
+                    medicines.add(
+                        Medicine(
+                            id = medicines.size + 1,
+                            name = name,
+                            dosage = dosage,
+                            times = time,
+                            description = notes
+                        )
+                    )
+                    // Tutup dialog
+                    showAddDialog = false
+                    Log.d("MedicineScreen", "Obat Disimpan: $name, $dosage, $time, $notes")
                 }
             )
         }
