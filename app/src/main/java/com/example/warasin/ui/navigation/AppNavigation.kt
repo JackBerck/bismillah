@@ -16,7 +16,9 @@ fun AppNavigation(navController: NavHostController, modifier: Modifier = Modifie
         startDestination = "home_screen",
         modifier = modifier
     ) {
-        composable("home_screen") { HomepageScreen() }
+        composable("home_screen") { HomepageScreen(
+            navController
+        ) }
         composable("medicine_screen") { MedicineScreen() }
         composable("history_screen") { /* Composable untuk layar Riwayat */ }
         composable("note_screen") { /* Composable untuk layar Catatan */ }

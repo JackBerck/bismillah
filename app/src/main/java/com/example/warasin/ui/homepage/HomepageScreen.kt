@@ -14,45 +14,53 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
+// import androidx.compose.material3.ExperimentalMaterial3Api // No longer needed for Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+// import androidx.compose.ui.platform.LocalContext // Not directly used in the provided snippet
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
 import com.example.warasin.ui.theme.WarasInTheme
 import com.example.warasin.R
 import com.example.warasin.ui.theme.Blue100
 import com.example.warasin.ui.theme.Blue600
-import com.example.warasin.ui.theme.Gray200
+// import com.example.warasin.ui.theme.Gray200 // Not directly used
 import com.example.warasin.ui.theme.Gray300
 import com.example.warasin.ui.theme.Gray50
-import com.example.warasin.ui.theme.Gray950
+// import com.example.warasin.ui.theme.Gray950 // Not directly used
 import com.example.warasin.ui.theme.Green100
 import com.example.warasin.ui.theme.Green600
+import androidx.navigation.compose.rememberNavController // Import for Preview
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomepageScreen(
-    // viewModel: HomepageViewModel = hiltViewModel() //
+    navController: NavController, // Add NavController as a parameter
+    viewModel: HomepageViewModel = hiltViewModel()
 ) {
-    // Menggunakan Column untuk menata elemen dari atas ke bawah
+    val medicines by viewModel.medicines.collectAsState()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(24.dp)
     ) {
-        // --- Bagian Header ---
         Text(
             text = "Selamat Pagi, Zaki!",
             style = MaterialTheme.typography.titleLarge
@@ -65,22 +73,21 @@ fun HomepageScreen(
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // --- Kartu Jadwal Minum Obat ---
-            Box(
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .border(
+                    BorderStroke(1.dp, Gray300),
+                    shape = RoundedCornerShape(8.dp)
+                )
+                .padding(16.dp)
+        ) {
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .border(
-                        BorderStroke(1.dp, Gray300),
-                        shape = RoundedCornerShape(8.dp)
-                    )
-                    .padding(16.dp)
+                    .align(Alignment.CenterStart)
             ) {
-                Column (
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .align(Alignment.CenterStart)
-                ) {
-                Row (
+                Row(
                     Modifier.fillMaxWidth(),
                 ) {
                     Icon(
@@ -97,83 +104,34 @@ fun HomepageScreen(
                     )
                 }
                 Spacer(modifier = Modifier.height(24.dp))
-                Column(
-                    Modifier.fillMaxWidth()
-                ) {
-                    Row(
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        modifier = Modifier.fillMaxWidth()
+
+                if (medicines.isEmpty()) {
+                    Text(
+                        text = "Belum ada jadwal obat hari ini",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Gray300,
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Center
+                    )
+                } else {
+                    LazyColumn(
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        Column {
-                            Text(
-                                text = "Paracetamol",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = MaterialTheme.typography.bodyLarge.fontWeight
+                        items(medicines) { medicine ->
+                            HomeMedicineItem(
+                                medicine = medicine,
+                                onMarkAsTaken = {
+                                    viewModel.markMedicineAsTaken(medicine.id)
+                                },
+                                onMarkAsNotTaken = {
+                                    viewModel.markMedicineAsNotTaken(medicine.id)
+                                }
                             )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = "1 tablet - 08:00",
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                        }
-                        Button(
-                            onClick = { /*TODO*/ },
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Green600),
-                        ) {
-                            Column {
-                                Text(
-                                    text = "Minum",
-                                    color = Gray50,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = MaterialTheme.typography.bodyLarge.fontWeight,
-                                )
-                            }
                         }
                     }
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Row(
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Column {
-                            Text(
-                                text = "Vitamin D",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = MaterialTheme.typography.bodyLarge.fontWeight
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = "1 kapsul - 12:00",
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                        }
-                        Button(
-                            onClick = { /*TODO*/ },
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Gray200),
-                        ) {
-                            Row (
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon (
-                                    painter = painterResource(id = R.drawable.baseline_check_24),
-                                    contentDescription = "Check Icon",
-                                    tint = Gray950,
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text(
-                                    text = "Sudah",
-                                    color = Gray950,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = MaterialTheme.typography.bodyLarge.fontWeight,
-                                )
-                            }
-                        }
-                    }
-                }
                 }
             }
+        }
 
         Spacer(modifier = Modifier.height(32.dp))
 
@@ -187,12 +145,12 @@ fun HomepageScreen(
                 )
                 .padding(16.dp)
         ) {
-            Column (
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .align(Alignment.CenterStart)
             ) {
-                Row (
+                Row(
                     Modifier.fillMaxWidth(),
                 ) {
                     Icon(
@@ -209,11 +167,11 @@ fun HomepageScreen(
                     )
                 }
                 Spacer(modifier = Modifier.height(24.dp))
-                Row (
+                Row(
                     horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Column (
+                    Column(
                         modifier = Modifier
                             .weight(1f)
                             .align(Alignment.CenterVertically)
@@ -237,7 +195,7 @@ fun HomepageScreen(
                             textAlign = TextAlign.Center
                         )
                     }
-                    Column (
+                    Column(
                         modifier = Modifier
                             .weight(1f)
                             .align(Alignment.CenterVertically)
@@ -273,33 +231,38 @@ fun HomepageScreen(
             }
         }
 
-
         Spacer(modifier = Modifier.height(32.dp))
 
         // --- Baris Tombol Aksi ---
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(16.dp) // Jarak antar tombol
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             // Tombol "Tambah Obat"
             Button(
-                onClick = { /*TODO*/ },
+                onClick = {
+                    // Now navController is accessible here
+                    navController.navigate("medicine_screen") {
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                },
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Blue600),
                 modifier = Modifier
                     .weight(1f)
             ) {
-                Column (
+                Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
                     Icon(
-                        painter = painterResource(id = R.drawable.baseline_add_24), // Ganti ikon
+                        painter = painterResource(id = R.drawable.baseline_add_24),
                         contentDescription = null,
                         tint = Gray50
                     )
                     Spacer(
-                        modifier = Modifier.width(8.dp)
+                        modifier = Modifier.width(8.dp) // This was height, changed to width for horizontal spacing
                     )
                     Text(
                         text = "Tambah Obat",
@@ -311,8 +274,8 @@ fun HomepageScreen(
             }
 
             // Tombol "Tambah Catatan"
-            OutlinedButton (
-                onClick = { /*TODO*/ },
+            OutlinedButton(
+                onClick = { /*TODO: navController.navigate("add_note_screen") or similar */ },
                 shape = RoundedCornerShape(12.dp),
                 border = BorderStroke(1.dp, Blue600),
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = Blue600),
@@ -324,11 +287,11 @@ fun HomepageScreen(
                     verticalArrangement = Arrangement.Center
                 ) {
                     Icon(
-                        painter = painterResource(id = R.drawable.outline_add_notes_24), // Ganti ikon
+                        painter = painterResource(id = R.drawable.outline_add_notes_24),
                         contentDescription = null
                     )
                     Spacer(
-                        modifier = Modifier.width(8.dp)
+                        modifier = Modifier.width(8.dp) // This was height, changed to width for horizontal spacing
                     )
                     Text(
                         text = "Tambah Catatan",
@@ -341,11 +304,12 @@ fun HomepageScreen(
     }
 }
 
-
 @Preview(showBackground = true, device = "spec:width=411dp,height=891dp")
 @Composable
 fun HomepageScreenPreview() {
     WarasInTheme {
-        HomepageScreen()
+        // For preview, you can use a rememberNavController or a fake NavController if needed
+        val navController = rememberNavController()
+        HomepageScreen(navController = navController)
     }
 }
