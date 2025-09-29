@@ -41,13 +41,25 @@ fun AddHealthNoteDialog(
     initialBloodPressure: String = "",
     initialBloodSugar: String = "",
     initialBodyTemperature: String = "",
-    initialMood: String = ""
+    initialMood: String = "",
+    initialNotes: String = ""
 ) {
     var bloodPressure by remember { mutableStateOf(initialBloodPressure) }
     var bloodSugar by remember { mutableStateOf(initialBloodSugar) }
     var bodyTemperature by remember { mutableStateOf(initialBodyTemperature) }
     var mood by remember { mutableStateOf(initialMood) }
-    var notes by remember { mutableStateOf("") }
+    var notes by remember { mutableStateOf(initialNotes) }
+
+    // Fungsi sanitasi
+    fun sanitizeBloodPressure(input: String): String {
+        return input.filterIndexed { idx, c ->
+            c.isDigit() || (c == '/' && !input.take(idx).contains('/'))
+        }.take(7) // Format: 120/80 (max 7 karakter)
+    }
+
+    fun sanitizeNumberInput(input: String): String {
+        return input.filter { it.isDigit() || it == '.' }
+    }
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -64,77 +76,83 @@ fun AddHealthNoteDialog(
                     .padding(24.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Text(
-                    text = if (initialBloodPressure.isEmpty()) "Tambah Catatan" else "Edit Catatan",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontSize = 24.sp,
-                )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.baseline_calendar_today_24),
+                        contentDescription = "Calendar Icon",
+                        tint = Blue600,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Text(
+                        text = if (initialBloodPressure.isEmpty()) "Tambah Catatan Harian" else "Edit Catatan Harian",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontSize = 24.sp,
+                    )
+                }
                 Spacer(Modifier.size(8.dp))
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .fillMaxHeight()
                 ) {
                     LabeledTextField(
                         label = "Tekanan Darah",
                         value = bloodPressure,
-                        onValueChange = { bloodPressure = it },
-                        placeholder = "Contoh: 120/80 mmHg",
+                        onValueChange = { bloodPressure = sanitizeBloodPressure(it) },
+                        placeholder = "120/80",
                         modifier = Modifier.weight(1f)
                     )
                     LabeledTextField(
                         label = "Gula Darah",
                         value = bloodSugar,
-                        onValueChange = { bloodSugar = it },
-                        placeholder = "Contoh: 90 mg/dL",
+                        onValueChange = { bloodSugar = sanitizeNumberInput(it).take(3) },
+                        placeholder = "90",
                         modifier = Modifier.weight(1f)
                     )
                 }
-                Row (
+                Row(
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .fillMaxHeight()
                 ) {
                     LabeledTextField(
                         label = "Suhu Tubuh",
                         value = bodyTemperature,
-                        onValueChange = { bodyTemperature = it },
-                        placeholder = "Contoh: 36.5 °C",
+                        onValueChange = { bodyTemperature = sanitizeNumberInput(it).take(5) },
+                        placeholder = "36.5",
                         modifier = Modifier.weight(1f)
                     )
                     LabeledTextField(
                         label = "Mood",
                         value = mood,
-                        onValueChange = { mood = it },
-                        placeholder = "Contoh: Bahagia",
+                        onValueChange = { mood = it.take(10) },
+                        placeholder = "Bahagia",
                         modifier = Modifier.weight(1f)
                     )
                 }
                 LabeledTextField(
                     label = "Catatan (Opsional)",
                     value = notes,
-                    onValueChange = { notes = it },
-                    placeholder = "Contoh: Setelah makan",
+                    onValueChange = { notes = it.take(50) },
+                    placeholder = "Setelah makan",
                 )
-                Row(
+                Column(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    ButtonWithoutIcon(
-                        onClick = onDismiss,
-                        text = "Batal",
-                        backgroundColor = Red600
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
                     ButtonWithoutIcon(
                         onClick = {
                             onSave(bloodPressure, bloodSugar, bodyTemperature, mood, notes)
                             onDismiss()
                         },
                         text = "Simpan",
-                        backgroundColor = Blue600
+                        backgroundColor = Blue600,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    ButtonWithoutIcon(
+                        onClick = onDismiss,
+                        text = "Batal",
+                        backgroundColor = Red600,
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
             }

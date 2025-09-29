@@ -61,6 +61,7 @@ fun HealthNotesScreen(
 ) {
     var showAddDialog by remember { mutableStateOf(false) }
     var showEditDialog by remember { mutableStateOf(false) }
+    var showDetailDialog by remember { mutableStateOf(false) }
     var selectedHealthNote by remember { mutableStateOf<HealthNote?>(null) }
 
     val healthNotes by viewModel.healthNotes.collectAsState()
@@ -70,23 +71,33 @@ fun HealthNotesScreen(
             .fillMaxSize()
             .padding(24.dp)
     ) {
-        Text(
-            text = "Catatan Kesehatan",
-            style = MaterialTheme.typography.titleLarge
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        ButtonWithIcon(
-            onClick = { showAddDialog = true },
-            text = "Tambah",
-            icon = R.drawable.baseline_add_24,
-            backgroundColor = Blue600,
-            contentColor = Gray50,
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-
         LazyColumn(
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            modifier = Modifier.fillMaxWidth(), // LazyColumn sekarang mengisi lebar Column parent
+            verticalArrangement = Arrangement.spacedBy(16.dp) // Jarak antar item di LazyColumn
         ) {
+            item {
+                Column { // Gunakan Column di dalam `item` jika perlu mengelompokkan beberapa komponen
+                    Text(
+                        text = "Catatan Kesehatan",
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                    Text(
+                        text = "Pantau kondisi kesehatan harian!",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    ButtonWithIcon(
+                        onClick = { showAddDialog = true },
+                        text = "Tambah",
+                        icon = R.drawable.baseline_add_24,
+                        backgroundColor = Blue600,
+                        contentColor = Gray50,
+                    )
+                }
+            }
+
+            // --- DAFTAR ITEM ---
+            // `items` dipanggil langsung di dalam LazyColumn
             items(healthNotes) { healthNote ->
                 HealthNoteItem(
                     healthNote = healthNote,
@@ -96,11 +107,16 @@ fun HealthNotesScreen(
                     },
                     onDelete = {
                         viewModel.deleteHealthNote(healthNote)
+                    },
+                    onClick = {
+                        selectedHealthNote = healthNote
+                        showDetailDialog = true
                     }
                 )
             }
         }
 
+        // Dialog Add
         if (showAddDialog) {
             AddHealthNoteDialog(
                 onDismiss = { showAddDialog = false },
@@ -111,6 +127,7 @@ fun HealthNotesScreen(
             )
         }
 
+        // Dialog Edit
         if (showEditDialog && selectedHealthNote != null) {
             AddHealthNoteDialog(
                 onDismiss = { showEditDialog = false },
@@ -125,6 +142,32 @@ fun HealthNotesScreen(
                         )
                     )
                     showEditDialog = false
+                    selectedHealthNote = null
+                },
+                initialBloodPressure = selectedHealthNote!!.bloodPressure,
+                initialBloodSugar = selectedHealthNote!!.bloodSugar,
+                initialBodyTemperature = selectedHealthNote!!.bodyTemperature,
+                initialMood = selectedHealthNote!!.mood,
+                initialNotes = selectedHealthNote!!.notes
+            )
+        }
+
+        // Dialog Detail
+        if (showDetailDialog && selectedHealthNote != null) {
+            HealthNoteDetailDialog(
+                healthNote = selectedHealthNote!!,
+                onEdit = {
+                    showDetailDialog = false
+                    showEditDialog = true
+                },
+                onDelete = {
+                    viewModel.deleteHealthNote(selectedHealthNote!!)
+                    showDetailDialog = false
+                    selectedHealthNote = null
+                },
+                onDismiss = {
+                    showDetailDialog = false
+                    selectedHealthNote = null
                 }
             )
         }
