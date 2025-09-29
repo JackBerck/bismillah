@@ -26,8 +26,9 @@ fun LabeledTextField(
     onValueChange: (String) -> Unit,
     placeholder: String = ""
 ) {
-    Column (
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+    Column(
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = modifier
     ) {
         Text(
             text = label,
@@ -35,11 +36,10 @@ fun LabeledTextField(
             fontWeight = FontWeight.Medium,
             color = MaterialTheme.colorScheme.onSurface
         )
-
         OutlinedTextField(
             value = value,
             onValueChange = onValueChange,
-            modifier = modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth(), // Only fill width, not height
             colors = TextFieldDefaults.colors(
                 focusedIndicatorColor = Blue600,
                 unfocusedIndicatorColor = Gray300,

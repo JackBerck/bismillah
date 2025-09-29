@@ -3,6 +3,7 @@ package com.example.warasin
 import android.content.Context
 import androidx.room.Room
 import com.example.warasin.data.AppDatabase
+import com.example.warasin.data.dao.HealthNoteDao
 import com.example.warasin.data.dao.MedicineDao
 import dagger.Module
 import dagger.Provides
@@ -20,12 +21,17 @@ object DatabaseModule {
         return Room.databaseBuilder(
             context,
             AppDatabase::class.java,
-            "medicine_database"
-        ).build()
+            "medicine_database",
+        )
+            .fallbackToDestructiveMigration()
+            .build()
     }
 
     @Provides
     fun provideMedicineDao(database: AppDatabase): MedicineDao {
         return database.medicineDao()
     }
+
+    @Provides
+    fun provideHealthNoteDao(database: AppDatabase): HealthNoteDao = database.healthNoteDao()
 }

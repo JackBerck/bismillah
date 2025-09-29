@@ -1,6 +1,8 @@
 package com.example.warasin.ui.healthnotes
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,12 +21,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.warasin.R
+import com.example.warasin.data.model.HealthNote
+import com.example.warasin.ui.component.ButtonWithoutIcon
 import com.example.warasin.ui.theme.Blue100
 import com.example.warasin.ui.theme.Blue600
+import com.example.warasin.ui.theme.Gray300
 import com.example.warasin.ui.theme.Green100
 import com.example.warasin.ui.theme.Green600
 import com.example.warasin.ui.theme.Purple100
@@ -33,9 +37,14 @@ import com.example.warasin.ui.theme.Red100
 import com.example.warasin.ui.theme.Red600
 import com.example.warasin.ui.theme.Yellow100
 import com.example.warasin.ui.theme.Yellow600
+import com.example.warasin.util.formatTimestamp
 
 @Composable
-fun HealthNotesItem() {
+fun HealthNoteItem(
+    healthNote: HealthNote,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit
+) {
     Row(
         Modifier.fillMaxWidth(),
     ) {
@@ -47,7 +56,7 @@ fun HealthNotesItem() {
         )
         Spacer(modifier = Modifier.width(8.dp))
         Text(
-            text = "Senin, 15 September 2025",
+            text = formatTimestamp(healthNote.timestamp),
             style = MaterialTheme.typography.bodyLarge,
         )
     }
@@ -61,7 +70,7 @@ fun HealthNotesItem() {
         ) {
             HealthNotesSubItem(
                 title = "Tekanan Darah",
-                value = "120/80 mmHg",
+                value = healthNote.bloodPressure,
                 iconPainter = painterResource(id = R.drawable.outline_favorite_24),
                 iconDescription = "Blood Preasure Icon",
                 backgroundColor = Red100,
@@ -73,7 +82,7 @@ fun HealthNotesItem() {
             )
             HealthNotesSubItem(
                 title = "Gula Darah",
-                value = "90 mg/dL",
+                value = healthNote.bloodSugar,
                 iconPainter = painterResource(id = R.drawable.outline_show_chart_24),
                 iconDescription = "Blood Sugar Icon",
                 backgroundColor = Blue100,
@@ -89,7 +98,7 @@ fun HealthNotesItem() {
         ) {
             HealthNotesSubItem(
                 title = "Suhu Tubuh",
-                value = "36.5 °C",
+                value = healthNote.bodyTemperature,
                 iconPainter = painterResource(id = R.drawable.outline_thermometer_24),
                 iconDescription = "Thermometer Icon",
                 backgroundColor = Green100,
@@ -140,10 +149,16 @@ fun HealthNotesItem() {
             }
         }
     }
-}
-
-@Preview
-@Composable
-fun HealthNotesItemPreview() {
-    HealthNotesItem()
+        /*Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            ButtonWithoutIcon(
+                onClick = onEdit,
+                text = "Edit",
+                backgroundColor = Blue600
+            )
+            ButtonWithoutIcon(
+                onClick = onDelete,
+                text = "Hapus",
+                backgroundColor = Red600
+            )
+        }*/
 }
