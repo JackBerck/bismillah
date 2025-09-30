@@ -1,5 +1,8 @@
 package com.example.warasin.ui.profile
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
@@ -46,10 +49,20 @@ import com.example.warasin.ui.theme.Red600
 
 @Composable
 fun ProfileScreen() {
-    var name by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
-    var age by remember { mutableStateOf("") }
-    var phoneNumber by remember { mutableStateOf("") }
+    var name by remember { mutableStateOf("Wrench") } // Initial value example
+    var email by remember { mutableStateOf("wrench@watchdog.com") } // Initial value example
+    var age by remember { mutableStateOf("21") } // Initial value example
+    var phoneNumber by remember { mutableStateOf("xxxxxx") } // Initial value example
+
+    // State untuk mengontrol mode edit
+    var isEditMode by remember { mutableStateOf(false) }
+
+    // State sementara untuk menyimpan nilai input saat mode edit, agar bisa dibatalkan
+    var tempName by remember(name) { mutableStateOf(name) }
+    var tempEmail by remember(email) { mutableStateOf(email) }
+    var tempAge by remember(age) { mutableStateOf(age) }
+    var tempPhoneNumber by remember(phoneNumber) { mutableStateOf(phoneNumber) }
+
 
     LazyColumn(
         modifier = Modifier
@@ -71,12 +84,12 @@ fun ProfileScreen() {
                         .clip(CircleShape)
                 )
                 Text(
-                    text = "Wrench",
+                    text = name, // Tampilkan nama dari state utama
                     style = MaterialTheme.typography.titleLarge,
                     textAlign = TextAlign.Center
                 )
                 Text(
-                    text = "wrench@watchdog.com",
+                    text = email, // Tampilkan email dari state utama
                     style = MaterialTheme.typography.bodyMedium,
                     textAlign = TextAlign.Center
                 )
@@ -112,14 +125,31 @@ fun ProfileScreen() {
                         )
                         Text(
                             text = "Informasi Pribadi",
-                            style = MaterialTheme.typography.titleMedium
+                            style = MaterialTheme.typography.bodyLarge
                         )
                     }
                     Button(
-                        onClick = { /* TODO: Edit action */ },
+                        onClick = {
+                            if (isEditMode) {
+                                // Jika sedang mode edit, aksi tombol "Edit" adalah membatalkan
+                                // Kembalikan nilai temp ke nilai state utama
+                                tempName = name
+                                tempEmail = email
+                                tempAge = age
+                                tempPhoneNumber = phoneNumber
+                            } else {
+                                // Jika tidak mode edit, sinkronkan nilai temp dengan nilai utama
+                                // sebelum masuk mode edit
+                                tempName = name
+                                tempEmail = email
+                                tempAge = age
+                                tempPhoneNumber = phoneNumber
+                            }
+                            isEditMode = !isEditMode // Toggle mode edit
+                        },
                         shape = RoundedCornerShape(8.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Blue600,
+                            containerColor = if (isEditMode) Red600 else Blue600, // Warna berubah saat mode edit
                             contentColor = Gray50
                         ),
                         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
@@ -130,12 +160,12 @@ fun ProfileScreen() {
                             horizontalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
                             Icon(
-                                painter = painterResource(id = R.drawable.outline_edit_24),
-                                contentDescription = "Edit Icon",
+                                painter = painterResource(id = if (isEditMode) R.drawable.baseline_cancel_24 else R.drawable.outline_edit_24), // Ikon berubah
+                                contentDescription = if (isEditMode) "Cancel Edit" else "Edit Icon",
                                 modifier = Modifier.size(18.dp)
                             )
                             Text(
-                                text = "Edit",
+                                text = if (isEditMode) "Batal" else "Edit", // Teks tombol berubah
                                 style = MaterialTheme.typography.labelMedium,
                             )
                         }
@@ -144,41 +174,61 @@ fun ProfileScreen() {
 
                 LabeledTextField(
                     label = "Nama Lengkap",
-                    value = name,
-                    onValueChange = { name = it },
-                    placeholder = "Masukkan nama lengkap Anda"
+                    value = if (isEditMode) tempName else name,
+                    onValueChange = { if (isEditMode) tempName = it },
+                    placeholder = "Masukkan nama lengkap Anda",
+                    enabled = isEditMode // Aktif/nonaktif berdasarkan mode edit
                 )
                 LabeledTextField(
                     label = "Email",
-                    value = email,
-                    onValueChange = { email = it },
-                    placeholder = "Masukkan email Anda"
+                    value = if (isEditMode) tempEmail else email,
+                    onValueChange = { if (isEditMode) tempEmail = it },
+                    placeholder = "Masukkan email Anda",
+                    enabled = isEditMode
                 )
                 LabeledTextField(
                     label = "Usia",
-                    value = age,
-                    onValueChange = { age = it },
-                    placeholder = "Masukkan usia Anda"
+                    value = if (isEditMode) tempAge else age,
+                    onValueChange = { if (isEditMode) tempAge = it },
+                    placeholder = "Masukkan usia Anda",
+                    enabled = isEditMode
                 )
                 LabeledTextField(
                     label = "Nomor Telepon",
-                    value = phoneNumber,
-                    onValueChange = { phoneNumber = it },
-                    placeholder = "Masukkan nomor telepon Anda"
+                    value = if (isEditMode) tempPhoneNumber else phoneNumber,
+                    onValueChange = { if (isEditMode) tempPhoneNumber = it },
+                    placeholder = "Masukkan nomor telepon Anda",
+                    enabled = isEditMode
                 )
 
-                ButtonWithoutIcon(
-                    onClick = { /* TODO: Save action */ },
-                    text = "Simpan",
-                    backgroundColor = Blue600,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                ButtonWithoutIcon(
-                    onClick = { /* TODO: Cancel action */ },
-                    text = "Batal",
-                    backgroundColor = Red600,
-                    modifier = Modifier.fillMaxWidth()
-                )
+                // Tombol Simpan hanya muncul saat mode edit
+                AnimatedVisibility(
+                    visible = isEditMode,
+                    enter = fadeIn(),
+                    exit = fadeOut()
+                ) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(8.dp) // Jarak antar tombol simpan/batal jika ada
+                    ) {
+                        ButtonWithoutIcon(
+                            onClick = {
+                                // Simpan perubahan dari temp ke state utama
+                                name = tempName
+                                email = tempEmail
+                                age = tempAge
+                                phoneNumber = tempPhoneNumber
+                                isEditMode = false // Keluar dari mode edit
+                                // TODO: Panggil fungsi ViewModel untuk menyimpan ke database/backend
+                            },
+                            text = "Simpan",
+                            backgroundColor = Blue600,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        // Tombol Batal yang sesungguhnya bisa dihilangkan dari sini
+                        // karena tombol "Edit" sudah berfungsi ganda sebagai "Batal" saat isEditMode = true
+                    }
+                }
             }
         }
 
@@ -255,7 +305,6 @@ fun ProfileSectionItem(
                 style = MaterialTheme.typography.bodyLarge,
                 color = textColor
             )
-
         }
     }
 }

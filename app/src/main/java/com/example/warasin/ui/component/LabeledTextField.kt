@@ -24,7 +24,8 @@ fun LabeledTextField(
     label: String,
     value: String,
     onValueChange: (String) -> Unit,
-    placeholder: String = ""
+    placeholder: String = "",
+    enabled: Boolean = true
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -53,7 +54,8 @@ fun LabeledTextField(
                 )
             },
             textStyle = MaterialTheme.typography.bodyMedium,
-            singleLine = true
+            singleLine = true,
+            enabled = enabled
         )
     }
 }
