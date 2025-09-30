@@ -8,6 +8,7 @@ import androidx.navigation.compose.composable
 import com.example.warasin.ui.healthnotes.HealthNotesScreen
 import com.example.warasin.ui.homepage.HomepageScreen
 import com.example.warasin.ui.medicine.MedicineScreen
+import com.example.warasin.ui.profile.ProfileScreen
 
 
 @Composable
@@ -23,6 +24,6 @@ fun AppNavigation(navController: NavHostController, modifier: Modifier = Modifie
         composable("medicine_screen") { MedicineScreen() }
         composable("history_screen") { /* Composable untuk layar Riwayat */ }
         composable("note_screen") { HealthNotesScreen() }
-        composable("profile_screen") { /* Composable untuk layar Profil */ }
+        composable("profile_screen") { ProfileScreen() }
     }
 }
