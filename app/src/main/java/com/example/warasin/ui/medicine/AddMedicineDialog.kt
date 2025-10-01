@@ -26,7 +26,7 @@ import java.util.Calendar
 @Composable
 fun AddMedicineDialog(
     onDismiss: () -> Unit,
-    onSave: (name: String, dosage: String, times: List<String>, notes: String) -> Unit
+    onSave: (name: String, dosage: String, notes: String) -> Unit
 ) {
     var name by remember { mutableStateOf("") }
     var dosage by remember { mutableStateOf("") }
@@ -161,37 +161,7 @@ fun AddMedicineDialog(
                     onValueChange = { notes = it },
                     placeholder = "Contoh: Setelah makan",
                 )
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
-                ) {
-                    ButtonWithoutIcon(
-                        onClick = onDismiss,
-                        text = "Batal",
-                        backgroundColor = Red600
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    ButtonWithoutIcon(
-                        onClick = {
-                            onSave(name, dosage, times.filter { it != "--:--" }, notes)
-                            onDismiss()
-                        },
-                        text = "Simpan",
-                        backgroundColor = Blue600,
-                        modifier = Modifier
-                    )
-                }
             }
         }
     }
-}
-
-@Preview
-@Composable
-fun AddMedicineDialogPreview() {
-    AddMedicineDialog(
-        onDismiss = {},
-        onSave = { _, _, _, _ -> }
-    )
 }

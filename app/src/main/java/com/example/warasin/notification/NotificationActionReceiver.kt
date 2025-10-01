@@ -32,7 +32,7 @@ class NotificationActionReceiver : BroadcastReceiver() {
             "TAKEN" -> {
                 // Update isTaken menjadi true
                 CoroutineScope(Dispatchers.IO).launch {
-                    database.medicineDao().updateMedicineTaken(medicineId, true)
+                    database.medicineDao().updateScheduleTakenStatus(medicineId, true)
                 }
                 notificationManager.cancel(notificationId)
             }

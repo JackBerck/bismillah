@@ -2,58 +2,74 @@ package com.example.warasin.ui.medicine
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.warasin.data.dao.MedicineDao
 import com.example.warasin.data.model.Medicine
-import com.example.warasin.notification.AlarmScheduler
+import com.example.warasin.data.model.MedicineWithSchedules
+import com.example.warasin.data.repository.MedicineRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
-import java.time.LocalTime
-import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
 @HiltViewModel
 class MedicineViewModel @Inject constructor(
-    private val medicineDao: MedicineDao,
-    private val alarmScheduler: AlarmScheduler
+    private val repository: MedicineRepository
 ) : ViewModel() {
-    val currentTime = LocalTime.now()
-    val addedTime = currentTime.plusMinutes(6)
-    val formatter = DateTimeFormatter.ofPattern("HH:mm")
-    val formattedTime = addedTime.format(formatter)
+    private val _medicines = MutableStateFlow<List<MedicineWithSchedules>>(emptyList())
+    val medicines: StateFlow<List<MedicineWithSchedules>> = _medicines.asStateFlow()
 
-    val initialMedicines = listOf(
-        Medicine(name = "Paracetamol", dosage = "500mg", times = listOf("$formattedTime", "20:00"), notes = "After meals"),
-        Medicine(name = "Ibuprofen", dosage = "200mg", times = listOf("12:00"), notes = "With water")
-    )
+    private val _selectedMedicine = MutableStateFlow<MedicineWithSchedules?>(null)
+    val selectedMedicine: StateFlow<MedicineWithSchedules?> = _selectedMedicine.asStateFlow()
 
-        val medicines = medicineDao.getAllMedicines()
-            .stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(5000L),
-                initialValue = initialMedicines
-            )
 
-    fun addMedicine(name: String, dosage: String, times: List<String>, notes: String) {
+    init {
+        loadAllMedicines()
+    }
+
+    private fun loadAllMedicines() {
         viewModelScope.launch {
-            val newMedicine = Medicine(
-                name = name,
-                dosage = dosage,
-                times = times,
-                notes = notes
-            )
-            val medicineId = medicineDao.insertMedicine(newMedicine)
-
-            val medicineWithId = newMedicine.copy(id = medicineId.toInt())
-            alarmScheduler.schedule(medicineWithId)
+            repository.getAllMedicines()
+                .catch { exception ->
+                    println("Error loading medicines: ${exception.message}")
+                }
+                .collect { medicineList ->
+                    _medicines.value = medicineList
+                }
         }
     }
 
-    fun deleteMedicine(medicine: Medicine) {
+    fun loadMedicineById(id: Int) {
         viewModelScope.launch {
-            medicineDao.deleteMedicine(medicine)
-            alarmScheduler.cancel(medicine)
+            repository.getMedicineById(id)
+                .catch { e -> _selectedMedicine.value = null }
+                .collect { _selectedMedicine.value = it }
+        }
+    }
+
+    fun addMedicine(name: String, dosage: String, notes: String) {
+        viewModelScope.launch {
+            val newMedicine = Medicine(name = name, dosage = dosage, notes = notes)
+            repository.addMedicineWithSchedules(newMedicine, emptyList())
+        }
+    }
+
+    fun updateMedicineDetails(medicine: Medicine) {
+        viewModelScope.launch {
+            repository.updateMedicine(medicine)
+        }
+    }
+
+    fun toggleScheduleTakenStatus(scheduleId: Int, isCurrentlyTaken: Boolean) {
+        viewModelScope.launch {
+            repository.updateScheduleStatus(scheduleId, !isCurrentlyTaken)
+        }
+    }
+
+    fun deleteMedicine(medicineId: Int) {
+        viewModelScope.launch {
+            repository.deleteMedicine(medicineId)
         }
     }
 }

@@ -12,10 +12,9 @@ import javax.inject.Inject
 
 @HiltViewModel
 class HomepageViewModel @Inject constructor(
-    private val medicineDao: MedicineDao
+    private val scheduleDao: MedicineDao,
 ): ViewModel() {
-
-    val medicines = medicineDao.getAllMedicines()
+    val schedules = scheduleDao.getSchedulesWithMedicine()
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000L),
@@ -24,13 +23,13 @@ class HomepageViewModel @Inject constructor(
 
     fun markMedicineAsTaken(medicineId: Int) {
         viewModelScope.launch {
-            medicineDao.updateMedicineTaken(medicineId, true)
+            scheduleDao.updateScheduleTakenStatus(medicineId, true)
         }
     }
 
     fun markMedicineAsNotTaken(medicineId: Int) {
         viewModelScope.launch {
-            medicineDao.updateMedicineTaken(medicineId, false)
+            scheduleDao.updateScheduleTakenStatus(medicineId, false)
         }
     }
 }

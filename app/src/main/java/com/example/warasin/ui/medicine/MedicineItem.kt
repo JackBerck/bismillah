@@ -23,15 +23,18 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.warasin.R
 import com.example.warasin.data.model.Medicine
+import com.example.warasin.data.model.MedicineWithSchedules
 import com.example.warasin.ui.theme.Blue100
 import com.example.warasin.ui.theme.Blue600
 import com.example.warasin.ui.theme.Gray300
 
 @Composable
 fun MedicineItem(
-    medicine: Medicine,
-    onClick: () -> Unit // Lambda untuk menangani klik
+    medicine: MedicineWithSchedules,
+    onClick: () -> Unit
 ) {
+    val jadwalText = medicine.schedules.joinToString(", ") { it.time }
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -56,16 +59,16 @@ fun MedicineItem(
             Spacer(modifier = Modifier.width(16.dp))
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(
-                    text = medicine.name,
+                    text = medicine.medicine.name,
                     style = MaterialTheme.typography.titleMedium,
                 )
                 Text(
-                    text = "Dosis: ${medicine.dosage}",
+                    text = "Dosis: ${medicine.medicine.dosage}",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
-                    text = "Frekuensi: ${medicine.times.size}",
+                    text = "Jadwal: $jadwalText",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

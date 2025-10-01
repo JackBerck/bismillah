@@ -6,14 +6,15 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import com.example.warasin.data.model.Medicine
+import com.example.warasin.data.model.Schedule
+import com.example.warasin.data.model.ScheduleWithMedicine
 import java.util.Calendar
 
 class AlarmScheduler(private val context: Context) {
     private val alarmManager = context.getSystemService(AlarmManager::class.java)
 
-    fun schedule(medicine: Medicine) {
-        medicine.times.forEachIndexed { timeIndex, time ->
-            val (hour, minute) = time.split(":").map { it.toInt() }
+    fun schedule(schedule: ScheduleWithMedicine) {
+            val (hour, minute) = schedule.schedule.time.split(":").map { it.toInt() }
 
             val calendar = Calendar.getInstance().apply {
                 set(Calendar.HOUR_OF_DAY, hour)
@@ -28,14 +29,14 @@ class AlarmScheduler(private val context: Context) {
                 }
             }
 
-            val notificationId = "${medicine.id}${timeIndex}".toInt()
+            val notificationId = "${schedule.schedule.time}${schedule.schedule.id}".toInt()
 
             val intent = Intent(context, AlarmReceiver::class.java).apply {
-                putExtra("MEDICINE_NAME", medicine.name)
-                putExtra("DOSAGE", medicine.dosage)
+                putExtra("MEDICINE_NAME", schedule.medicine.name)
+                putExtra("DOSAGE", schedule.medicine.dosage)
                 putExtra("NOTIFICATION_ID", notificationId)
-                putExtra("MEDICINE_ID", medicine.id) // Tambahkan medicine ID
-                putExtra("ACTUAL_TIME", time)
+                putExtra("MEDICINE_ID", schedule.medicine.id)
+                putExtra("ACTUAL_TIME", schedule.schedule.time)
             }
 
             val pendingIntent = PendingIntent.getBroadcast(
@@ -58,12 +59,10 @@ class AlarmScheduler(private val context: Context) {
                     pendingIntent
                 )
             }
-        }
     }
 
-    fun cancel(medicine: Medicine) {
-        medicine.times.forEachIndexed { timeIndex, _ ->
-            val notificationId = "${medicine.id}${timeIndex}".toInt()
+    fun cancel(schedule: ScheduleWithMedicine) {
+            val notificationId = "${schedule.schedule.time}${schedule.schedule.id}".toInt()
             alarmManager.cancel(
                 PendingIntent.getBroadcast(
                     context,
@@ -72,6 +71,5 @@ class AlarmScheduler(private val context: Context) {
                     PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
                 )
             )
-        }
     }
 }

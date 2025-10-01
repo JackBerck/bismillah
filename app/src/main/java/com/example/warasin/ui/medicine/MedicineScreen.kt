@@ -35,6 +35,7 @@ import com.example.warasin.ui.theme.WarasInTheme
 import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.warasin.data.model.Medicine
+import com.example.warasin.data.model.MedicineWithSchedules
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,7 +45,7 @@ fun MedicineScreen(
     val medicines by viewModel.medicines.collectAsState(emptyList())
 
     var showDialog by remember { mutableStateOf(false) }
-    var selectedMedicine by remember { mutableStateOf<Medicine?>(null) }
+    var selectedMedicine by remember { mutableStateOf<MedicineWithSchedules?>(null) }
 
     var showAddDialog by remember { mutableStateOf(false) }
 
@@ -102,7 +103,7 @@ fun MedicineScreen(
                     selectedMedicine = null
                 },
                 onDelete = {
-                    viewModel.deleteMedicine(selectedMedicine!!)
+                    viewModel.deleteMedicine(selectedMedicine?.medicine?.id!!)
                     showDialog = false
                     selectedMedicine = null
                 }
@@ -112,8 +113,8 @@ fun MedicineScreen(
         if (showAddDialog) {
             AddMedicineDialog(
                 onDismiss = { showAddDialog = false },
-                onSave = { name, dosage, time, notes ->
-                    viewModel.addMedicine(name, dosage, time, notes)
+                onSave = { name, dosage, notes ->
+                    viewModel.addMedicine(name, dosage, notes)
                     showAddDialog = false
                 }
             )
