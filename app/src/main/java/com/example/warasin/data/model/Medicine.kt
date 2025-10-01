@@ -9,7 +9,5 @@ data class Medicine(
     val id: Int = 0,
     val name: String,
     val dosage: String,
-    val times: List<String>,
     val notes: String,
-    val isTaken: Boolean = false
 )
