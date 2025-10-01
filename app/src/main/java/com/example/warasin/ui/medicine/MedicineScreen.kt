@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -36,6 +37,7 @@ import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.warasin.data.model.Medicine
 import com.example.warasin.data.model.MedicineWithSchedules
+import com.example.warasin.ui.component.ButtonWithIcon
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,27 +57,23 @@ fun MedicineScreen(
             .padding(24.dp)
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.fillMaxWidth()
-            ) {
+            Column {
                 Text(
                     text = "Daftar Obat",
-                    style = MaterialTheme.typography.titleLarge,
+                    style = MaterialTheme.typography.titleLarge
                 )
-                Button(
-                    onClick = { showAddDialog = true }, // Tampilkan dialog tambah
-                    shape = RoundedCornerShape(8.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Blue600),
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.baseline_add_24),
-                        contentDescription = null,
-                        tint = Gray50,
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
+                Text(
+                    text = "Pantau pengingat obat harianmu!",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                ButtonWithIcon(
+                    onClick = { showAddDialog = true },
+                    text = "Tambah",
+                    icon = R.drawable.baseline_add_24,
+                    backgroundColor = Blue600,
+                    contentColor = Gray50,
+                )
             }
 
             Spacer(modifier = Modifier.size(32.dp))
@@ -106,7 +104,7 @@ fun MedicineScreen(
                     viewModel.deleteMedicine(selectedMedicine?.medicine?.id!!)
                     showDialog = false
                     selectedMedicine = null
-                }
+                },
             )
         }
 

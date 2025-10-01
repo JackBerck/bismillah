@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -21,7 +22,11 @@ fun MedicineDetailDialog(
     onDismiss: () -> Unit,
     onDelete: () -> Unit
 ) {
-    val jadwalText = medicine.schedules.joinToString(", ") { it.time }
+    val jadwalText = if (medicine.schedules.isNullOrEmpty()) {
+        "Tidak ada jadwal obat"
+    } else {
+        medicine.schedules.joinToString(", ") { it.time }
+    }
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
@@ -58,15 +63,20 @@ fun MedicineDetailDialog(
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 Row(
-                    horizontalArrangement = Arrangement.End,
-                    modifier = Modifier.fillMaxWidth()
+                    horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
+                    modifier = Modifier.fillMaxWidth(),
                 ) {
                     ButtonWithoutIcon(
                         onClick = onDelete,
                         text = "Hapus",
                         backgroundColor = Red600
                     )
-                    Spacer(Modifier.width(8.dp))
+                    ButtonWithoutIcon(
+                        onClick = onDismiss,
+                        text = "Edit",
+                        backgroundColor = Gray50,
+                        contentColor = Gray950
+                    )
                     ButtonWithoutIcon(
                         onClick = onDismiss,
                         text = "Tutup",

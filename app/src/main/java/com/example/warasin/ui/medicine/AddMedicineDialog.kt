@@ -30,40 +30,7 @@ fun AddMedicineDialog(
 ) {
     var name by remember { mutableStateOf("") }
     var dosage by remember { mutableStateOf("") }
-    var times by remember { mutableStateOf(mutableStateListOf("--:--")) }
     var notes by remember { mutableStateOf("") }
-
-    var showTimePickerForIndex by remember { mutableStateOf<Int?>(null) }
-    val context = LocalContext.current
-
-    showTimePickerForIndex?.let { index ->
-        val calendar = Calendar.getInstance()
-        val hour = calendar.get(Calendar.HOUR_OF_DAY)
-        val minute = calendar.get(Calendar.MINUTE)
-
-        val timePickerDialog = android.app.TimePickerDialog(
-            context,
-            { _, selectedHour, selectedMinute ->
-                times[index] = String.format("%02d:%02d", selectedHour, selectedMinute)
-                showTimePickerForIndex = null
-            },
-            hour,
-            minute,
-            true
-        )
-
-        timePickerDialog.setOnCancelListener {
-            showTimePickerForIndex = null
-        }
-
-        timePickerDialog.show()
-
-        DisposableEffect(Unit) {
-            onDispose {
-                timePickerDialog.dismiss()
-            }
-        }
-    }
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -114,53 +81,33 @@ fun AddMedicineDialog(
                     placeholder = "Contoh: 1 tablet, 500 mg"
                 )
 
-                Column (
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Text(
-                        text = "Waktu Minum",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    times.forEachIndexed { index, time ->
-                        OutlinedTextField(
-                            value = time,
-                            onValueChange = {},
-                            readOnly = true,
-                            enabled = false,
-                            modifier = Modifier.fillMaxWidth().clickable() { showTimePickerForIndex = index },
-                            trailingIcon = { Icon(painterResource(id = R.drawable.outline_timer_24), "Pilih Waktu") },
-                            colors = OutlinedTextFieldDefaults.colors(
-                                disabledTextColor = MaterialTheme.colorScheme.onSurface,
-                                disabledBorderColor = MaterialTheme.colorScheme.outline,
-                                disabledPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                disabledTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant
-                            ),
-                            textStyle = MaterialTheme.typography.bodyMedium,
-                            singleLine = true
-                        )
-                    }
-                }
-
-
-                // Tombol untuk menambah input waktu baru
-                TextButton(
-                    onClick = { times.add("--:--") },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(painterResource(id = R.drawable.baseline_add_24), contentDescription = "Tambah Waktu")
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("Tambah Waktu")
-                }
-
                 LabeledTextField(
                     label = "Catatan (Opsional)",
                     value = notes,
                     onValueChange = { notes = it },
                     placeholder = "Contoh: Setelah makan",
                 )
+
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    ButtonWithoutIcon(
+                        onClick = {
+                            onSave(name, dosage, notes)
+                            onDismiss()
+                        },
+                        text = "Simpan",
+                        backgroundColor = Blue600,
+                        enabled = name.isNotBlank() && dosage.isNotBlank(),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    ButtonWithoutIcon(
+                        onClick = onDismiss,
+                        text = "Batal",
+                        backgroundColor = Red600,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             }
         }
     }

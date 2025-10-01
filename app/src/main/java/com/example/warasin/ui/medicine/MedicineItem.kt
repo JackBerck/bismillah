@@ -33,7 +33,11 @@ fun MedicineItem(
     medicine: MedicineWithSchedules,
     onClick: () -> Unit
 ) {
-    val jadwalText = medicine.schedules.joinToString(", ") { it.time }
+    val jadwalText = if (medicine.schedules.isNullOrEmpty()) {
+        "Tidak ada jadwal obat"
+    } else {
+        medicine.schedules.joinToString(", ") { it.time }
+    }
 
     Box(
         modifier = Modifier
