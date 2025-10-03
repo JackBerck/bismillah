@@ -51,7 +51,7 @@ class NotificationActionReceiver : BroadcastReceiver() {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
         val calendar = Calendar.getInstance().apply {
-            add(Calendar.MINUTE, 5)
+            add(Calendar.MINUTE, 1)
         }
 
         val intent = Intent(context, AlarmReceiver::class.java).apply {

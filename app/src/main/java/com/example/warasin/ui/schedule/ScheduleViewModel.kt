@@ -1,5 +1,6 @@
 package com.example.warasin.ui.schedule
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.warasin.data.model.Medicine
@@ -7,17 +8,21 @@ import com.example.warasin.data.model.MedicineWithSchedules
 import com.example.warasin.data.model.Schedule
 import com.example.warasin.data.model.ScheduleWithMedicine
 import com.example.warasin.data.repository.MedicineRepository
+import com.example.warasin.notification.AlarmScheduler
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.text.toInt
 
 @HiltViewModel
 class ScheduleViewModel @Inject constructor(
-    private val repository: MedicineRepository
+    private val repository: MedicineRepository,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
     private val _schedules = MutableStateFlow<List<ScheduleWithMedicine>>(emptyList())
     val schedules: StateFlow<List<ScheduleWithMedicine>> = _schedules.asStateFlow()
@@ -28,6 +33,7 @@ class ScheduleViewModel @Inject constructor(
     private val _selectedSchedule = MutableStateFlow<ScheduleWithMedicine?>(null)
     val selectedSchedule: StateFlow<ScheduleWithMedicine?> = _selectedSchedule.asStateFlow()
 
+    private val alarmScheduler = AlarmScheduler(context)
 
     init {
         loadAllSchedule()
@@ -68,8 +74,15 @@ class ScheduleViewModel @Inject constructor(
 
     fun addSchedule(medicineId: Int, time: String) {
         viewModelScope.launch {
-            val newMedicine = Schedule(time = time, medicineId = medicineId)
-            repository.addSchedule(newMedicine)
+            val newSchedule = Schedule(time = time, medicineId = medicineId)
+            val scheduleId = repository.addSchedule(newSchedule)
+
+            repository.getScheduleByIdWithMedicine(scheduleId.toInt())
+                .collect { scheduleWithMedicine ->
+                    scheduleWithMedicine?.let {
+                        alarmScheduler.schedule(it)
+                    }
+                }
         }
     }
 
@@ -87,7 +100,13 @@ class ScheduleViewModel @Inject constructor(
 
     fun deleteSchedule(scheduleId: Int) {
         viewModelScope.launch {
-            repository.deleteSchedule(scheduleId)
+            repository.getScheduleByIdWithMedicine(scheduleId)
+                .collect { scheduleWithMedicine ->
+                    scheduleWithMedicine?.let {
+                        alarmScheduler.cancel(it)
+                    }
+                    repository.deleteSchedule(scheduleId)
+                }
         }
     }
 }

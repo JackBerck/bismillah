@@ -6,6 +6,7 @@ import android.app.NotificationManager
 import android.content.Context
 import android.os.Build
 import dagger.hilt.android.HiltAndroidApp
+import kotlin.text.compareTo
 
 @HiltAndroidApp
 class WarasinApp : Application() {
@@ -16,15 +17,15 @@ class WarasinApp : Application() {
 
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val name = "Pengingat Obat"
-            val descriptionText = "Channel untuk notifikasi pengingat minum obat"
-            val importance = NotificationManager.IMPORTANCE_HIGH
-            val channel = NotificationChannel("medicine_channel_id", name, importance).apply {
-                description = descriptionText
+            val channel = NotificationChannel(
+                "medicine_channel_id",
+                "Medicine Reminders",
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = "Channel for medicine reminder notifications"
             }
 
-            val notificationManager: NotificationManager =
-                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val notificationManager = getSystemService(NotificationManager::class.java)
             notificationManager.createNotificationChannel(channel)
         }
     }
