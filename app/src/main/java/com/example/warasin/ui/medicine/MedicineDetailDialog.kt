@@ -58,7 +58,7 @@ fun MedicineDetailDialog(
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Text(
-                    text = medicine.medicine.notes,
+                    text = medicine.medicine.notes?: "Tidak ada catatan",
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Spacer(modifier = Modifier.height(16.dp))
@@ -70,12 +70,6 @@ fun MedicineDetailDialog(
                         onClick = onDelete,
                         text = "Hapus",
                         backgroundColor = Red600
-                    )
-                    ButtonWithoutIcon(
-                        onClick = onDismiss,
-                        text = "Edit",
-                        backgroundColor = Gray50,
-                        contentColor = Gray950
                     )
                     ButtonWithoutIcon(
                         onClick = onDismiss,

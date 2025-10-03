@@ -1,4 +1,4 @@
-package com.example.warasin.ui.medicine
+package com.example.warasin.ui.schedule
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -27,18 +27,20 @@ import com.example.warasin.ui.theme.Gray50
 import com.example.warasin.ui.theme.WarasInTheme
 import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.warasin.data.model.MedicineWithSchedules
+import com.example.warasin.data.model.ScheduleWithMedicine
 import com.example.warasin.ui.component.ButtonWithIcon
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MedicineScreen(
-    viewModel: MedicineViewModel = hiltViewModel()
+fun ScheduleScreen(
+    viewModel: ScheduleViewModel = hiltViewModel()
 ) {
+
+    val schedules by viewModel.schedules.collectAsState(emptyList())
     val medicines by viewModel.medicines.collectAsState(emptyList())
 
     var showDialog by remember { mutableStateOf(false) }
-    var selectedMedicine by remember { mutableStateOf<MedicineWithSchedules?>(null) }
+    var selectedSchedule by remember { mutableStateOf<ScheduleWithMedicine?>(null) }
 
     var showAddDialog by remember { mutableStateOf(false) }
 
@@ -50,11 +52,11 @@ fun MedicineScreen(
         Column(modifier = Modifier.fillMaxSize()) {
             Column {
                 Text(
-                    text = "Daftar Obat",
+                    text = "Jadwal Minum Obat",
                     style = MaterialTheme.typography.titleLarge
                 )
                 Text(
-                    text = "Pantau pengingat obat harianmu!",
+                    text = "Kelola jadwal minum obat Anda agar tidak lupa",
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Spacer(modifier = Modifier.height(8.dp))
@@ -72,11 +74,20 @@ fun MedicineScreen(
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                items(medicines) { medicine ->
-                    MedicineItem(
-                        medicine = medicine,
+                // 2. Gunakan items(list, key)
+                items(items = schedules, key = { it.schedule.id }) { scheduleItem ->
+                    ScheduleItem(
+                        schedule = scheduleItem,
+                        onEdit = {
+                            selectedSchedule = scheduleItem
+                            showDialog = true
+                        },
+                        onDelete = {
+                            // 3. Panggil fungsi delete yang benar (hapus schedule, bukan medicine)
+                            viewModel.deleteSchedule(scheduleItem.schedule.id)
+                        },
                         onClick = {
-                            selectedMedicine = medicine
+                            selectedSchedule = scheduleItem
                             showDialog = true
                         }
                     )
@@ -84,37 +95,30 @@ fun MedicineScreen(
             }
         }
 
-        if (showDialog && selectedMedicine != null) {
-            MedicineDetailDialog(
-                medicine = selectedMedicine!!,
+        if (showDialog && selectedSchedule != null) {
+            ScheduleDetailDialog(
+                schedule = selectedSchedule!!,
                 onDismiss = {
                     showDialog = false
-                    selectedMedicine = null
+                    selectedSchedule = null
                 },
                 onDelete = {
-                    viewModel.deleteMedicine(selectedMedicine?.medicine?.id!!)
+                    viewModel.deleteSchedule(selectedSchedule?.schedule?.id!!)
                     showDialog = false
-                    selectedMedicine = null
+                    selectedSchedule = null
                 },
             )
         }
 
         if (showAddDialog) {
-            AddMedicineDialog(
+            AddScheduleDialog(
+                medicines = medicines,
                 onDismiss = { showAddDialog = false },
-                onSave = { name, dosage, notes ->
-                    viewModel.addMedicine(name, dosage, notes)
+                onSave = { medicineId, time ->
+                    viewModel.addSchedule(medicineId, time)
                     showAddDialog = false
-                }
+                },
             )
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun MedicineScreenPreview() {
-    WarasInTheme {
-        MedicineScreen()
     }
 }

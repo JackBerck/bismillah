@@ -9,5 +9,5 @@ data class Medicine(
     val id: Int = 0,
     val name: String,
     val dosage: String,
-    val notes: String,
+    val notes: String?,
 )

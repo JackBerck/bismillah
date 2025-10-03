@@ -19,7 +19,7 @@ interface MedicineDao {
     suspend fun insertMedicine(medicine: Medicine): Long
 
     @Insert
-    suspend fun insertSchedules(schedules: List<Schedule>)
+    suspend fun insertSchedules(schedules: Schedule): Long
 
 
     // --- Read Operations ---
@@ -39,6 +39,10 @@ interface MedicineDao {
     @Transaction
     @Query("SELECT * FROM schedules WHERE medicineId = :medicineId")
     fun getSchedulesByMedicineId(medicineId: Int): Flow<List<Schedule>>
+
+    @Transaction
+    @Query("SELECT * FROM schedules WHERE id = :scheduleId")
+    fun getScheduleByIdWithMedicine(scheduleId: Int): Flow<ScheduleWithMedicine>
 
 
     // --- Update Operations ---

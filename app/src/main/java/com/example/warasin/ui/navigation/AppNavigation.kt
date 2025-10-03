@@ -9,6 +9,7 @@ import com.example.warasin.ui.healthnotes.HealthNotesScreen
 import com.example.warasin.ui.homepage.HomepageScreen
 import com.example.warasin.ui.medicine.MedicineScreen
 import com.example.warasin.ui.profile.ProfileScreen
+import com.example.warasin.ui.schedule.ScheduleScreen
 
 
 @Composable
@@ -22,7 +23,7 @@ fun AppNavigation(navController: NavHostController, modifier: Modifier = Modifie
             navController
         ) }
         composable("medicine_screen") { MedicineScreen() }
-        composable("history_screen") { /* Composable untuk layar Riwayat */ }
+        composable("schedule_screen") { ScheduleScreen() }
         composable("note_screen") { HealthNotesScreen() }
         composable("profile_screen") { ProfileScreen() }
     }

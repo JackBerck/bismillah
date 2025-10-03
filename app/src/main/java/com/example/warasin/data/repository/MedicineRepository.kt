@@ -29,12 +29,17 @@ class MedicineRepository @Inject constructor(
         return medicineDao.getSchedulesByMedicineId(medicineId)
     }
 
-    // --- CREATE ---
-    suspend fun addMedicineWithSchedules(medicine: Medicine, schedules: List<Schedule>) {
-        val medicineId = medicineDao.insertMedicine(medicine)
-        val schedulesWithId = schedules.map { it.copy(medicineId = medicineId.toInt()) }
+    fun getScheduleByIdWithMedicine(scheduleId: Int): Flow<ScheduleWithMedicine> {
+        return medicineDao.getScheduleByIdWithMedicine(scheduleId)
+    }
 
-        medicineDao.insertSchedules(schedulesWithId)
+    // --- CREATE ---
+    suspend fun addMedicine(medicine: Medicine) {
+        medicineDao.insertMedicine(medicine)
+    }
+
+    suspend fun addSchedule(schedule: Schedule): Long {
+        return medicineDao.insertSchedules(schedule)
     }
 
     // --- UPDATE ---
