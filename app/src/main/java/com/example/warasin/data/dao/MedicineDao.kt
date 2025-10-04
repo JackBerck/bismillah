@@ -29,6 +29,10 @@ interface MedicineDao {
 
     @Transaction
     @Query("SELECT * FROM medicines WHERE id = :medicineId")
+    suspend fun getMedicineById(medicineId: Int): Medicine?
+
+    @Transaction
+    @Query("SELECT * FROM medicines WHERE id = :medicineId")
     fun getMedicineWithSchedulesById(medicineId: Int): Flow<MedicineWithSchedules>
 
     @Transaction

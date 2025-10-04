@@ -29,6 +29,9 @@ import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.warasin.data.model.ScheduleWithMedicine
 import com.example.warasin.ui.component.ButtonWithIcon
+import com.example.warasin.ui.medicine.AddMedicineDialog
+import com.example.warasin.util.stringToCalendar
+import java.util.Calendar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -39,10 +42,11 @@ fun ScheduleScreen(
     val schedules by viewModel.schedules.collectAsState(emptyList())
     val medicines by viewModel.medicines.collectAsState(emptyList())
 
-    var showDialog by remember { mutableStateOf(false) }
+    var showDetailDialog by remember { mutableStateOf(false) }
     var selectedSchedule by remember { mutableStateOf<ScheduleWithMedicine?>(null) }
 
     var showAddDialog by remember { mutableStateOf(false) }
+    var showEditDialog by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
@@ -74,38 +78,40 @@ fun ScheduleScreen(
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // 2. Gunakan items(list, key)
                 items(items = schedules, key = { it.schedule.id }) { scheduleItem ->
                     ScheduleItem(
                         schedule = scheduleItem,
                         onEdit = {
                             selectedSchedule = scheduleItem
-                            showDialog = true
+                            showEditDialog = true
                         },
                         onDelete = {
-                            // 3. Panggil fungsi delete yang benar (hapus schedule, bukan medicine)
                             viewModel.deleteSchedule(scheduleItem.schedule.id)
                         },
                         onClick = {
                             selectedSchedule = scheduleItem
-                            showDialog = true
+                            showDetailDialog = true
                         }
                     )
                 }
             }
         }
 
-        if (showDialog && selectedSchedule != null) {
+        if (showDetailDialog && selectedSchedule != null) {
             ScheduleDetailDialog(
                 schedule = selectedSchedule!!,
                 onDismiss = {
-                    showDialog = false
+                    showDetailDialog = false
                     selectedSchedule = null
                 },
                 onDelete = {
                     viewModel.deleteSchedule(selectedSchedule?.schedule?.id!!)
-                    showDialog = false
+                    showDetailDialog = false
                     selectedSchedule = null
+                },
+                onEdit = {
+                    showDetailDialog = false
+                    showEditDialog = true
                 },
             )
         }
@@ -118,6 +124,26 @@ fun ScheduleScreen(
                     viewModel.addSchedule(medicineId, time)
                     showAddDialog = false
                 },
+            )
+        }
+
+        if (showEditDialog && selectedSchedule != null) {
+            AddScheduleDialog (
+                onDismiss = { showEditDialog = false },
+                onSave = { medicineId: Int, time: String ->
+                    viewModel.updateSchedule(
+                        selectedSchedule!!.schedule.copy(
+                            medicineId = medicineId,
+                            time = time
+                        )
+                    )
+                    showEditDialog = false
+                    selectedSchedule = null
+                },
+                initialMedicineId = selectedSchedule!!.medicine,
+                initialTime = stringToCalendar(selectedSchedule!!.schedule.time),
+                medicines = medicines,
+                isEditMode = true
             )
         }
     }

@@ -37,10 +37,11 @@ fun MedicineScreen(
 ) {
     val medicines by viewModel.medicines.collectAsState(emptyList())
 
-    var showDialog by remember { mutableStateOf(false) }
+    var showDetailDialog by remember { mutableStateOf(false) }
     var selectedMedicine by remember { mutableStateOf<MedicineWithSchedules?>(null) }
 
     var showAddDialog by remember { mutableStateOf(false) }
+    var showEditDialog by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
@@ -77,24 +78,28 @@ fun MedicineScreen(
                         medicine = medicine,
                         onClick = {
                             selectedMedicine = medicine
-                            showDialog = true
+                            showDetailDialog = true
                         }
                     )
                 }
             }
         }
 
-        if (showDialog && selectedMedicine != null) {
+        if (showDetailDialog && selectedMedicine != null) {
             MedicineDetailDialog(
                 medicine = selectedMedicine!!,
                 onDismiss = {
-                    showDialog = false
+                    showDetailDialog = false
                     selectedMedicine = null
                 },
                 onDelete = {
                     viewModel.deleteMedicine(selectedMedicine?.medicine?.id!!)
-                    showDialog = false
+                    showDetailDialog = false
                     selectedMedicine = null
+                },
+                onEdit = {
+                    showDetailDialog = false
+                    showEditDialog = true
                 },
             )
         }
@@ -108,13 +113,26 @@ fun MedicineScreen(
                 }
             )
         }
-    }
-}
 
-@Preview(showBackground = true)
-@Composable
-fun MedicineScreenPreview() {
-    WarasInTheme {
-        MedicineScreen()
+        if (showEditDialog && selectedMedicine != null) {
+            AddMedicineDialog(
+                onDismiss = { showEditDialog = false },
+                onSave = { name: String, dosage: String, notes: String ->
+                    viewModel.updateMedicineDetails(
+                        selectedMedicine!!.medicine.copy(
+                            name = name,
+                            dosage = dosage,
+                            notes = notes
+                        )
+                    )
+                    showEditDialog = false
+                    selectedMedicine = null
+                },
+                initialName = selectedMedicine!!.medicine.name,
+                initialDosage = selectedMedicine!!.medicine.dosage,
+                initialNotes = selectedMedicine!!.medicine.notes,
+                isEditMode = true
+            )
+        }
     }
 }

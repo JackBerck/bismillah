@@ -32,21 +32,20 @@ import java.util.Locale
 fun AddScheduleDialog(
     medicines: List<MedicineWithSchedules>,
     onDismiss: () -> Unit,
-    onSave: (medicineId: Int, time: String) -> Unit
+    onSave: (medicineId: Int, time: String) -> Unit,
+    initialMedicineId: Medicine? = null,
+    initialTime: Calendar? = null,
+    isEditMode: Boolean = false,
 ) {
-    // --- State Management ---
-    var selectedMedicine by remember { mutableStateOf<Medicine?>(null) }
-    var selectedTime by remember { mutableStateOf<Calendar?>(null) }
+    var selectedMedicine by remember { mutableStateOf(initialMedicineId) }
+    var selectedTime by remember { mutableStateOf(initialTime) }
     var isDropdownExpanded by remember { mutableStateOf(false) }
 
-    // --- State baru untuk mengontrol visibilitas Time Picker ---
     var showTimePicker by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
     val timeFormatter = remember { SimpleDateFormat("HH:mm", Locale.getDefault()) }
 
-
-    // --- Dialog Utama ---
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false),
@@ -63,7 +62,6 @@ fun AddScheduleDialog(
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // ... (Header dan Dropdown obat tidak berubah) ...
                 Row(
                     Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
@@ -76,7 +74,7 @@ fun AddScheduleDialog(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Tambah Pengingat Obat",
+                        text = if (isEditMode) "Edit Jadwal Obat" else "Tambah Jadwal Obat",
                         style = MaterialTheme.typography.titleMedium,
                         fontSize = 24.sp,
                     )
@@ -143,7 +141,6 @@ fun AddScheduleDialog(
                     )
                 }
 
-                // ... (Tombol Simpan & Batal tidak berubah) ...
                 Column(
                     modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -158,7 +155,7 @@ fun AddScheduleDialog(
                                 }
                             }
                         },
-                        text = "Simpan",
+                        text = if (isEditMode) "Simpan Perubahan" else "Simpan",
                         backgroundColor = Blue600,
                         enabled = selectedMedicine != null && selectedTime != null,
                         modifier = Modifier.fillMaxWidth()

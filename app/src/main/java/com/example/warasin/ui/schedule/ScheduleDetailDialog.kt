@@ -2,6 +2,8 @@ package com.example.warasin.ui.schedule
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -22,67 +24,87 @@ import com.example.warasin.ui.theme.Red600
 fun ScheduleDetailDialog(
     schedule: ScheduleWithMedicine,
     onDismiss: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onEdit: () -> Unit
 ) {
-    val timeText = schedule.schedule.time.ifEmpty {
-        "Tidak ada jadwal obat"
-    }
-    val scheduleCondition = schedule.schedule.isTaken ?.let {
-        if (it) "Sudah diminum" else "Belum diminum"
-    } ?: "Belum ada data"
+    val timeText = schedule.schedule.time
+
+    val scheduleCondition = if (schedule.schedule.isTaken) "Sudah diminum" else "Belum diminum"
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
-            shape = RoundedCornerShape(8.dp),
+            shape = RoundedCornerShape(16.dp),
             modifier = Modifier
                 .fillMaxWidth(0.95f)
         ) {
-            Column(
+            Box(
                 modifier = Modifier
                     .padding(16.dp)
-                    .fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                    .fillMaxWidth()
             ) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.fillMaxWidth(),
+                IconButton(
+                    onClick = onDismiss,
+                    modifier = Modifier
+                        .size(24.dp)
+                        .align(Alignment.TopEnd)
                 ) {
                     Icon(
-                        painter = painterResource(id = R.drawable.baseline_calendar_today_24),
-                        contentDescription = "Calendar Icon",
-                        tint = Blue600,
-                        modifier = Modifier.size(24.dp)
-                    )
-                    Text(
-                        text = "Detail Jadwal Obat",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontSize = 20.sp,
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Tutup Detail"
                     )
                 }
-                Spacer(Modifier.height(8.dp))
+
                 Column(
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    DetailItem("Dosis", schedule.medicine.dosage)
-                    DetailItem("Waktu", timeText)
-                    DetailItem("Kondisi", scheduleCondition)
-                }
-                Spacer(modifier = Modifier.height(16.dp))
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    ButtonWithoutIcon(
-                        onClick = onDelete,
-                        text = "Hapus",
-                        backgroundColor = Red600
-                    )
-                    ButtonWithoutIcon(
-                        onClick = onDismiss,
-                        text = "Tutup",
-                        backgroundColor = Gray950,
-                        contentColor = Gray50
-                    )
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.baseline_calendar_today_24),
+                            contentDescription = "Calendar Icon",
+                            tint = Blue600,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Text(
+                            text = "Detail Jadwal Obat",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontSize = 20.sp,
+                            modifier = Modifier.padding(end = 32.dp)
+                        )
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        DetailItem("Obat", schedule.medicine.name)
+                        DetailItem("Dosis", schedule.medicine.dosage)
+                        DetailItem("Waktu", timeText)
+                        DetailItem("Kondisi", scheduleCondition)
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        ButtonWithoutIcon(
+                            onClick = onDelete,
+                            text = "Hapus",
+                            backgroundColor = Red600,
+                            modifier = Modifier.weight(1f)
+                        )
+                        ButtonWithoutIcon(
+                            onClick = onEdit,
+                            text = "Edit",
+                            backgroundColor = Blue600,
+                            contentColor = Gray50,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
                 }
             }
         }

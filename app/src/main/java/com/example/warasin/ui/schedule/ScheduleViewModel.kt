@@ -109,4 +109,17 @@ class ScheduleViewModel @Inject constructor(
                 }
         }
     }
+
+    fun updateSchedule(schedule: Schedule) {
+        viewModelScope.launch {
+            repository.updateSchedule(schedule)
+
+            repository.getScheduleByIdWithMedicine(schedule.id)
+                .collect { scheduleWithMedicine ->
+                    scheduleWithMedicine?.let {
+                        alarmScheduler.schedule(it)
+                    }
+                }
+        }
+    }
 }

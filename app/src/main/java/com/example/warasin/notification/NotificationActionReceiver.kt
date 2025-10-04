@@ -51,36 +51,42 @@ class NotificationActionReceiver : BroadcastReceiver() {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
         val calendar = Calendar.getInstance().apply {
-            add(Calendar.MINUTE, 1)
+            add(Calendar.MINUTE, 10) // Snooze 10 menit
         }
 
-        val intent = Intent(context, AlarmReceiver::class.java).apply {
-            putExtra("MEDICINE_NAME", "Pengingat Snooze")
-            putExtra("DOSAGE", "Jangan lupa minum obat")
-            putExtra("NOTIFICATION_ID", notificationId)
-            putExtra("MEDICINE_ID", medicineId)
-            putExtra("ACTUAL_TIME", "Sekarang")
-        }
+        // Ambil data medicine dari database untuk notifikasi snooze
+        CoroutineScope(Dispatchers.IO).launch {
+            val medicine = database.medicineDao().getMedicineById(medicineId)
+            medicine?.let {
+                val intent = Intent(context, AlarmReceiver::class.java).apply {
+                    putExtra("MEDICINE_NAME", it.name)
+                    putExtra("DOSAGE", it.dosage)
+                    putExtra("NOTIFICATION_ID", notificationId)
+                    putExtra("MEDICINE_ID", medicineId)
+                    putExtra("ACTUAL_TIME", "Pengingat Snooze")
+                }
 
-        val pendingIntent = PendingIntent.getBroadcast(
-            context,
-            notificationId + 3000,
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
+                val pendingIntent = PendingIntent.getBroadcast(
+                    context,
+                    notificationId + 4000, // ID unik untuk snooze
+                    intent,
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                )
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            alarmManager.setExactAndAllowWhileIdle(
-                AlarmManager.RTC_WAKEUP,
-                calendar.timeInMillis,
-                pendingIntent
-            )
-        } else {
-            alarmManager.setExact(
-                AlarmManager.RTC_WAKEUP,
-                calendar.timeInMillis,
-                pendingIntent
-            )
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    alarmManager.setExactAndAllowWhileIdle(
+                        AlarmManager.RTC_WAKEUP,
+                        calendar.timeInMillis,
+                        pendingIntent
+                    )
+                } else {
+                    alarmManager.setExact(
+                        AlarmManager.RTC_WAKEUP,
+                        calendar.timeInMillis,
+                        pendingIntent
+                    )
+                }
+            }
         }
     }
 }

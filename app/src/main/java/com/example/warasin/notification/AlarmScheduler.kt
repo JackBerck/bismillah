@@ -5,8 +5,6 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Build
-import com.example.warasin.data.model.Medicine
-import com.example.warasin.data.model.Schedule
 import com.example.warasin.data.model.ScheduleWithMedicine
 import java.util.Calendar
 
@@ -22,9 +20,7 @@ class AlarmScheduler(private val context: Context) {
             set(Calendar.SECOND, 0)
             set(Calendar.MILLISECOND, 0)
 
-            // Kurangi 5 menit untuk countdown
-            add(Calendar.MINUTE, 1)
-
+            // Langsung pada waktu yang ditentukan (hapus pengurangan 5 menit)
             // Jika waktu sudah lewat, jadwalkan untuk hari berikutnya
             if (before(Calendar.getInstance())) {
                 add(Calendar.DATE, 1)

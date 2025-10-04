@@ -1,6 +1,5 @@
 package com.example.warasin.ui.medicine
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -8,10 +7,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -21,16 +17,19 @@ import com.example.warasin.ui.component.ButtonWithoutIcon
 import com.example.warasin.ui.component.LabeledTextField
 import com.example.warasin.ui.theme.Blue600
 import com.example.warasin.ui.theme.Red600
-import java.util.Calendar
 
 @Composable
 fun AddMedicineDialog(
     onDismiss: () -> Unit,
-    onSave: (name: String, dosage: String, notes: String) -> Unit
+    onSave: (String, String, String) -> Unit,
+    initialName: String = "",
+    initialDosage: String = "",
+    initialNotes: String? = "",
+    isEditMode: Boolean = false
 ) {
-    var name by remember { mutableStateOf("") }
-    var dosage by remember { mutableStateOf("") }
-    var notes by remember { mutableStateOf("") }
+    var name by remember { mutableStateOf(initialName) }
+    var dosage by remember { mutableStateOf(initialDosage) }
+    var notes by remember { mutableStateOf(initialNotes) }
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -61,7 +60,7 @@ fun AddMedicineDialog(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Tambah Pengingat Obat",
+                        text = if (isEditMode) "Edit Obat" else "Tambah Obat",
                         style = MaterialTheme.typography.titleMedium,
                         fontSize = 24.sp,
                     )
@@ -83,7 +82,7 @@ fun AddMedicineDialog(
 
                 LabeledTextField(
                     label = "Catatan (Opsional)",
-                    value = notes,
+                    value = notes ?: "",
                     onValueChange = { notes = it },
                     placeholder = "Contoh: Setelah makan",
                 )
@@ -93,10 +92,10 @@ fun AddMedicineDialog(
                 ) {
                     ButtonWithoutIcon(
                         onClick = {
-                            onSave(name, dosage, notes)
+                            onSave(name, dosage, notes?:"")
                             onDismiss()
                         },
-                        text = "Simpan",
+                        text = if (isEditMode) "Simpan Perubahan" else "Simpan",
                         backgroundColor = Blue600,
                         enabled = name.isNotBlank() && dosage.isNotBlank(),
                         modifier = Modifier.fillMaxWidth()

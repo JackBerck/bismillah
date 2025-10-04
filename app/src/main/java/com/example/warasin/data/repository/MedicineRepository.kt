@@ -47,6 +47,10 @@ class MedicineRepository @Inject constructor(
         medicineDao.updateMedicine(medicine)
     }
 
+    suspend fun updateSchedule(schedule: Schedule) {
+        medicineDao.updateSchedule(schedule)
+    }
+
     suspend fun updateScheduleStatus(scheduleId: Int, isTaken: Boolean) {
         medicineDao.updateScheduleTakenStatus(scheduleId, isTaken)
     }
