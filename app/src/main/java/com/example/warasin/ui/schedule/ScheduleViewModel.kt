@@ -72,9 +72,14 @@ class ScheduleViewModel @Inject constructor(
         }
     }
 
-    fun addSchedule(medicineId: Int, time: String) {
+    fun addSchedule(medicineId: Int, time: String, selectedDays: List<Int>) {
         viewModelScope.launch {
-            val newSchedule = Schedule(time = time, medicineId = medicineId)
+            val selectedDaysString = selectedDays.joinToString(",")
+            val newSchedule = Schedule(
+                time = time,
+                medicineId = medicineId,
+                selectedDays = selectedDaysString
+            )
             val scheduleId = repository.addSchedule(newSchedule)
 
             repository.getScheduleByIdWithMedicine(scheduleId.toInt())

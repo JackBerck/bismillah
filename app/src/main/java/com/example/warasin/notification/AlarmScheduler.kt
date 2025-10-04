@@ -13,22 +13,49 @@ class AlarmScheduler(private val context: Context) {
 
     fun schedule(schedule: ScheduleWithMedicine) {
         val (hour, minute) = schedule.schedule.time.split(":").map { it.toInt() }
+        val selectedDays = schedule.schedule.selectedDays.split(",")
+            .filter { it.isNotEmpty() }
+            .map { it.toInt() }
 
+        selectedDays.forEach { dayOfWeek ->
+            scheduleForSpecificDay(schedule, hour, minute, dayOfWeek)
+        }
+    }
+
+    private fun scheduleForSpecificDay(
+        schedule: ScheduleWithMedicine,
+        hour: Int,
+        minute: Int,
+        dayOfWeek: Int
+    ) {
         val calendar = Calendar.getInstance().apply {
             set(Calendar.HOUR_OF_DAY, hour)
             set(Calendar.MINUTE, minute)
             set(Calendar.SECOND, 0)
             set(Calendar.MILLISECOND, 0)
 
-            // Langsung pada waktu yang ditentukan (hapus pengurangan 5 menit)
-            // Jika waktu sudah lewat, jadwalkan untuk hari berikutnya
+            // Set hari dalam seminggu (Calendar.SUNDAY = 1, Calendar.MONDAY = 2, dst)
+            val calendarDayOfWeek = when (dayOfWeek) {
+                1 -> Calendar.MONDAY
+                2 -> Calendar.TUESDAY
+                3 -> Calendar.WEDNESDAY
+                4 -> Calendar.THURSDAY
+                5 -> Calendar.FRIDAY
+                6 -> Calendar.SATURDAY
+                7 -> Calendar.SUNDAY
+                else -> Calendar.MONDAY
+            }
+
+            set(Calendar.DAY_OF_WEEK, calendarDayOfWeek)
+
+            // Jika waktu sudah lewat minggu ini, jadwalkan untuk minggu depan
             if (before(Calendar.getInstance())) {
-                add(Calendar.DATE, 1)
+                add(Calendar.WEEK_OF_YEAR, 1)
             }
         }
 
-        // Generate unique notification ID
-        val notificationId = (schedule.schedule.id * 1000 + schedule.medicine.id)
+        // Generate unique notification ID untuk setiap kombinasi schedule + day
+        val notificationId = (schedule.schedule.id * 10000 + schedule.medicine.id * 10 + dayOfWeek)
 
         val intent = Intent(context, AlarmReceiver::class.java).apply {
             putExtra("MEDICINE_NAME", schedule.medicine.name)
@@ -36,6 +63,7 @@ class AlarmScheduler(private val context: Context) {
             putExtra("NOTIFICATION_ID", notificationId)
             putExtra("MEDICINE_ID", schedule.medicine.id)
             putExtra("ACTUAL_TIME", schedule.schedule.time)
+            putExtra("DAY_OF_WEEK", dayOfWeek)
         }
 
         val pendingIntent = PendingIntent.getBroadcast(
@@ -45,33 +73,31 @@ class AlarmScheduler(private val context: Context) {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        // Set exact alarm
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            alarmManager.setExactAndAllowWhileIdle(
-                AlarmManager.RTC_WAKEUP,
-                calendar.timeInMillis,
-                pendingIntent
-            )
-        } else {
-            alarmManager.setExact(
-                AlarmManager.RTC_WAKEUP,
-                calendar.timeInMillis,
-                pendingIntent
-            )
-        }
+        // Set repeating alarm setiap minggu
+        alarmManager.setRepeating(
+            AlarmManager.RTC_WAKEUP,
+            calendar.timeInMillis,
+            AlarmManager.INTERVAL_DAY * 7, // Repeat setiap 7 hari
+            pendingIntent
+        )
 
-        // Log untuk debug
-        println("Alarm scheduled for: ${calendar.time} with ID: $notificationId")
+        println("Alarm scheduled for: ${calendar.time} (Day: $dayOfWeek) with ID: $notificationId")
     }
 
     fun cancel(schedule: ScheduleWithMedicine) {
-        val notificationId = (schedule.schedule.id * 1000 + schedule.medicine.id)
-        val pendingIntent = PendingIntent.getBroadcast(
-            context,
-            notificationId,
-            Intent(context, AlarmReceiver::class.java),
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-        alarmManager.cancel(pendingIntent)
+        val selectedDays = schedule.schedule.selectedDays.split(",")
+            .filter { it.isNotEmpty() }
+            .map { it.toInt() }
+
+        selectedDays.forEach { dayOfWeek ->
+            val notificationId = (schedule.schedule.id * 10000 + schedule.medicine.id * 10 + dayOfWeek)
+            val pendingIntent = PendingIntent.getBroadcast(
+                context,
+                notificationId,
+                Intent(context, AlarmReceiver::class.java),
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            alarmManager.cancel(pendingIntent)
+        }
     }
 }

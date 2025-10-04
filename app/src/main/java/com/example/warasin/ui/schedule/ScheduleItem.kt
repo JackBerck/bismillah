@@ -25,9 +25,12 @@ import com.example.warasin.data.model.ScheduleWithMedicine
 import com.example.warasin.ui.theme.Blue100
 import com.example.warasin.ui.theme.Blue600
 import com.example.warasin.ui.theme.Gray300
+import com.example.warasin.ui.theme.Green100
 import com.example.warasin.ui.theme.Green600
 import com.example.warasin.ui.theme.Red100
 import com.example.warasin.ui.theme.Red600
+import com.example.warasin.util.toSelectedDaysShortText
+import kotlin.sequences.ifEmpty
 
 @Composable
 fun ScheduleItem(
@@ -36,9 +39,8 @@ fun ScheduleItem(
     onDelete: () -> Unit,
     onClick: () -> Unit
 ) {
-    val timeText = schedule.schedule.time.ifEmpty {
-        "Tidak ada jadwal obat"
-    }
+    val timeText = schedule.schedule.time.ifEmpty { "Tidak ada jadwal obat" }
+    val daysText = schedule.schedule.selectedDays.toSelectedDaysShortText()
 
     Column (
         modifier = Modifier
@@ -68,27 +70,31 @@ fun ScheduleItem(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Row (
-                horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally),
+                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
             ) {
-                ScheduleSubItem(
+                /*ScheduleSubItem(
                     title = "Dosis",
                     value = schedule.medicine.dosage,
                     backgroundColor = Red100,
                     contentColor = Red600,
                     valueTextColor = Red600,
-                    modifier = Modifier
-                        .weight(1f)
-                        .align(Alignment.CenterVertically)
-                )
+                    modifier = Modifier.weight(1f)
+                )*/
                 ScheduleSubItem(
                     title = "Waktu",
                     value = timeText,
                     backgroundColor = Blue100,
                     contentColor = Blue600,
                     valueTextColor = Blue600,
-                    modifier = Modifier
-                        .weight(1f)
-                        .align(Alignment.CenterVertically)
+                    modifier = Modifier.weight(1f)
+                )
+                ScheduleSubItem(
+                    title = "Hari",
+                    value = daysText,
+                    backgroundColor = Green100, // Tambahkan warna ini di theme
+                    contentColor = Green600,
+                    valueTextColor = Green600,
+                    modifier = Modifier.weight(1f)
                 )
             }
         }

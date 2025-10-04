@@ -275,7 +275,13 @@ fun HomepageScreen(
 
             // Tombol "Tambah Catatan"
             OutlinedButton(
-                onClick = { /*TODO: navController.navigate("add_note_screen") or similar */ },
+                onClick = {
+                    // Now navController is accessible here
+                    navController.navigate("note_screen") {
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                },
                 shape = RoundedCornerShape(12.dp),
                 border = BorderStroke(1.dp, Blue600),
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = Blue600),

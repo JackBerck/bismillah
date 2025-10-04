@@ -120,8 +120,8 @@ fun ScheduleScreen(
             AddScheduleDialog(
                 medicines = medicines,
                 onDismiss = { showAddDialog = false },
-                onSave = { medicineId, time ->
-                    viewModel.addSchedule(medicineId, time)
+                onSave = { medicineId, time, selectedDays ->
+                    viewModel.addSchedule(medicineId, time, selectedDays)
                     showAddDialog = false
                 },
             )
@@ -130,7 +130,7 @@ fun ScheduleScreen(
         if (showEditDialog && selectedSchedule != null) {
             AddScheduleDialog (
                 onDismiss = { showEditDialog = false },
-                onSave = { medicineId: Int, time: String ->
+                onSave = { medicineId: Int, time: String, _ ->
                     viewModel.updateSchedule(
                         selectedSchedule!!.schedule.copy(
                             medicineId = medicineId,

@@ -20,5 +20,6 @@ data class Schedule(
     val id: Int = 0,
     val medicineId: Int,
     val time: String,
+    val selectedDays: String,
     val isTaken: Boolean = false
 )
