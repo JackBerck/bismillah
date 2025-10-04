@@ -5,6 +5,7 @@ import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import androidx.core.app.NotificationCompat
 import com.example.warasin.MainActivity
 import com.example.warasin.R
@@ -40,15 +41,21 @@ class AlarmReceiver : BroadcastReceiver() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
+        // Untuk Android < 8.0, set suara langsung di notification
+        val soundUri = Uri.parse("android.resource://${context.packageName}/${R.raw.clock_alarm}")
+
         val notification = NotificationCompat.Builder(context, "medicine_channel_id")
             .setSmallIcon(R.drawable.outline_medication_24)
             .setContentTitle("🔔 WAKTUNYA MINUM OBAT!")
             .setContentText("$medicineName - $dosage pada $actualTime")
             .setPriority(NotificationCompat.PRIORITY_MAX)
+            .setCategory(NotificationCompat.CATEGORY_ALARM)
             .setOngoing(false)
             .setContentIntent(pendingIntent)
             .setAutoCancel(false)
-            .setDefaults(NotificationCompat.DEFAULT_ALL)
+            .setDefaults(0) // Jangan gunakan default sound
+            .setSound(soundUri) // Set suara kustom untuk compatibility
+            .setVibrate(longArrayOf(0, 500, 200, 500))
             .addAction(
                 R.drawable.outline_medication_24,
                 "Sudah Diminum",
@@ -60,7 +67,7 @@ class AlarmReceiver : BroadcastReceiver() {
                 createHideIntent(context, notificationId, medicineId)
             )
             .addAction(
-                R.drawable.baseline_snooze_24, // Tambahkan icon snooze jika ada
+                R.drawable.baseline_snooze_24,
                 "Snooze 10 Menit",
                 createSnoozeIntent(context, notificationId, medicineId)
             )
