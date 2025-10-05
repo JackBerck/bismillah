@@ -184,15 +184,15 @@ class HealthNoteRepository @Inject constructor(
         }
     }
 
-    suspend fun syncUserToFirestore(userId: String, name: String, email: String) {
+    suspend fun syncUserToFirestore(userId: String, name: String, email: String, age: Int = 0, phoneNumber: String = "") {
         try {
             val firestoreUser = FirestoreUser(
                 id = userId,
                 name = name,
                 email = email,
                 password = "",
-                phone_number = "",
-                age = 0
+                phone_number = phoneNumber,
+                age = age
             )
 
             firestore.collection("users")
@@ -203,6 +203,7 @@ class HealthNoteRepository @Inject constructor(
             Log.d("HealthNoteRepository", "User synced successfully")
         } catch (e: Exception) {
             Log.e("HealthNoteRepository", "Failed to sync user: ${e.message}")
+            throw e
         }
     }
 }
