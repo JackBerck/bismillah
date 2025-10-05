@@ -20,6 +20,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.warasin.R
 import com.example.warasin.data.model.Medicine
+import com.example.warasin.data.model.MedicineWithSchedules
+import com.example.warasin.data.model.ScheduleWithMedicine
 import com.example.warasin.ui.theme.Gray300
 import com.example.warasin.ui.theme.Gray50
 import com.example.warasin.ui.theme.Gray950
@@ -27,7 +29,7 @@ import com.example.warasin.ui.theme.Green600
 
 @Composable
 fun HomeMedicineItem(
-    medicine: Medicine,
+    schedule: ScheduleWithMedicine,
     onMarkAsTaken: () -> Unit,
     onMarkAsNotTaken: () -> Unit
 ) {
@@ -37,20 +39,20 @@ fun HomeMedicineItem(
     ) {
         Column {
             Text(
-                text = medicine.name,
+                text = schedule.medicine.name,
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = MaterialTheme.typography.bodyLarge.fontWeight
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "${medicine.dosage} - ${medicine.times.joinToString(", ")}",
+                text = "${schedule.medicine.dosage} - ${schedule.schedule.time}",
                 style = MaterialTheme.typography.bodySmall
             )
         }
 
         Button(
             onClick = {
-                if (medicine.isTaken) {
+                if (schedule.schedule.isTaken) {
                     onMarkAsNotTaken()
                 } else {
                     onMarkAsTaken()
@@ -58,10 +60,10 @@ fun HomeMedicineItem(
             },
             shape = RoundedCornerShape(12.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = if (medicine.isTaken) Gray300 else Green600
+                containerColor = if (schedule.schedule.isTaken) Gray300 else Green600
             ),
         ) {
-            if (medicine.isTaken) {
+            if (schedule.schedule.isTaken) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically
                 ) {

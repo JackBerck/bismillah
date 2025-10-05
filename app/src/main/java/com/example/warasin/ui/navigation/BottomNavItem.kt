@@ -21,9 +21,9 @@ val bottomNavItems = listOf(
         route = "medicine_screen"
     ),
     BottomNavItem(
-        title = "Riwayat",
-        icon = R.drawable.outline_history_24,
-        route = "history_screen"
+        title = "Jadwal",
+        icon = R.drawable.outline_timer_24,
+        route = "schedule_screen"
     ),
     BottomNavItem(
         title = "Catatan",

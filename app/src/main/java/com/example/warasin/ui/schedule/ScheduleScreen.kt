@@ -1,4 +1,4 @@
-package com.example.warasin.ui.medicine
+package com.example.warasin.ui.schedule
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -27,18 +27,23 @@ import com.example.warasin.ui.theme.Gray50
 import com.example.warasin.ui.theme.WarasInTheme
 import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.warasin.data.model.MedicineWithSchedules
+import com.example.warasin.data.model.ScheduleWithMedicine
 import com.example.warasin.ui.component.ButtonWithIcon
+import com.example.warasin.ui.medicine.AddMedicineDialog
+import com.example.warasin.util.stringToCalendar
+import java.util.Calendar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MedicineScreen(
-    viewModel: MedicineViewModel = hiltViewModel()
+fun ScheduleScreen(
+    viewModel: ScheduleViewModel = hiltViewModel()
 ) {
+
+    val schedules by viewModel.schedules.collectAsState(emptyList())
     val medicines by viewModel.medicines.collectAsState(emptyList())
 
     var showDetailDialog by remember { mutableStateOf(false) }
-    var selectedMedicine by remember { mutableStateOf<MedicineWithSchedules?>(null) }
+    var selectedSchedule by remember { mutableStateOf<ScheduleWithMedicine?>(null) }
 
     var showAddDialog by remember { mutableStateOf(false) }
     var showEditDialog by remember { mutableStateOf(false) }
@@ -51,11 +56,11 @@ fun MedicineScreen(
         Column(modifier = Modifier.fillMaxSize()) {
             Column {
                 Text(
-                    text = "Daftar Obat",
+                    text = "Jadwal Minum Obat",
                     style = MaterialTheme.typography.titleLarge
                 )
                 Text(
-                    text = "Pantau pengingat obat harianmu!",
+                    text = "Kelola jadwal minum obat Anda agar tidak lupa",
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Spacer(modifier = Modifier.height(8.dp))
@@ -73,11 +78,18 @@ fun MedicineScreen(
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                items(medicines) { medicine ->
-                    MedicineItem(
-                        medicine = medicine,
+                items(items = schedules, key = { it.schedule.id }) { scheduleItem ->
+                    ScheduleItem(
+                        schedule = scheduleItem,
+                        onEdit = {
+                            selectedSchedule = scheduleItem
+                            showEditDialog = true
+                        },
+                        onDelete = {
+                            viewModel.deleteSchedule(scheduleItem.schedule.id)
+                        },
                         onClick = {
-                            selectedMedicine = medicine
+                            selectedSchedule = scheduleItem
                             showDetailDialog = true
                         }
                     )
@@ -85,17 +97,17 @@ fun MedicineScreen(
             }
         }
 
-        if (showDetailDialog && selectedMedicine != null) {
-            MedicineDetailDialog(
-                medicine = selectedMedicine!!,
+        if (showDetailDialog && selectedSchedule != null) {
+            ScheduleDetailDialog(
+                schedule = selectedSchedule!!,
                 onDismiss = {
                     showDetailDialog = false
-                    selectedMedicine = null
+                    selectedSchedule = null
                 },
                 onDelete = {
-                    viewModel.deleteMedicine(selectedMedicine?.medicine?.id!!)
+                    viewModel.deleteSchedule(selectedSchedule?.schedule?.id!!)
                     showDetailDialog = false
-                    selectedMedicine = null
+                    selectedSchedule = null
                 },
                 onEdit = {
                     showDetailDialog = false
@@ -105,32 +117,32 @@ fun MedicineScreen(
         }
 
         if (showAddDialog) {
-            AddMedicineDialog(
+            AddScheduleDialog(
+                medicines = medicines,
                 onDismiss = { showAddDialog = false },
-                onSave = { name, dosage, notes ->
-                    viewModel.addMedicine(name, dosage, notes)
+                onSave = { medicineId, time, selectedDays ->
+                    viewModel.addSchedule(medicineId, time, selectedDays)
                     showAddDialog = false
-                }
+                },
             )
         }
 
-        if (showEditDialog && selectedMedicine != null) {
-            AddMedicineDialog(
+        if (showEditDialog && selectedSchedule != null) {
+            AddScheduleDialog (
                 onDismiss = { showEditDialog = false },
-                onSave = { name: String, dosage: String, notes: String ->
-                    viewModel.updateMedicineDetails(
-                        selectedMedicine!!.medicine.copy(
-                            name = name,
-                            dosage = dosage,
-                            notes = notes
+                onSave = { medicineId: Int, time: String, _ ->
+                    viewModel.updateSchedule(
+                        selectedSchedule!!.schedule.copy(
+                            medicineId = medicineId,
+                            time = time
                         )
                     )
                     showEditDialog = false
-                    selectedMedicine = null
+                    selectedSchedule = null
                 },
-                initialName = selectedMedicine!!.medicine.name,
-                initialDosage = selectedMedicine!!.medicine.dosage,
-                initialNotes = selectedMedicine!!.medicine.notes,
+                initialMedicineId = selectedSchedule!!.medicine,
+                initialTime = stringToCalendar(selectedSchedule!!.schedule.time),
+                medicines = medicines,
                 isEditMode = true
             )
         }

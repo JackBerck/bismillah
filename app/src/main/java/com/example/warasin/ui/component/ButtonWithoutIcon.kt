@@ -15,7 +15,8 @@ fun ButtonWithoutIcon(
     modifier: Modifier = Modifier,
     backgroundColor: Color = com.example.warasin.ui.theme.Blue600,
     contentColor: Color = Gray50,
-    textStyle: TextStyle = MaterialTheme.typography.bodyMedium
+    textStyle: TextStyle = MaterialTheme.typography.bodyMedium,
+    enabled: Boolean = true
 ) {
     Button(
         onClick = onClick,
@@ -25,6 +26,7 @@ fun ButtonWithoutIcon(
             contentColor = contentColor
         ),
         shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp),
+        enabled = enabled
     ) {
         Text(
             text = text,

@@ -1,4 +1,4 @@
-package com.example.warasin.ui.healthnotes
+package com.example.warasin.ui.schedule
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -26,35 +26,25 @@ import com.example.warasin.ui.theme.Red600
 import com.example.warasin.ui.theme.WarasInTheme
 
 @Composable
-fun HealthNotesSubItem(
+fun ScheduleSubItem(
     title: String,
     value: String,
-    iconPainter: Painter,
-    iconDescription: String,
     backgroundColor: Color,
-    contentColor: Color, // Used for icon and main text color
-    valueTextColor: Color, // Specific color for the value text
+    contentColor: Color,
+    valueTextColor: Color,
     modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = modifier // Use the passed modifier first
+        modifier = modifier
             .background(backgroundColor, shape = RoundedCornerShape(8.dp))
             .padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Icon(
-            painter = iconPainter,
-            contentDescription = iconDescription,
-            tint = contentColor, // Use contentColor for icon tint
-            modifier = Modifier
-                .size(24.dp)
-                .align(Alignment.CenterHorizontally)
-        )
         Text(
             text = title,
             style = MaterialTheme.typography.bodyMedium,
-            color = contentColor, // Use contentColor for title text
+            color = contentColor,
             modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.Center
         )
@@ -62,7 +52,7 @@ fun HealthNotesSubItem(
             text = value,
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = MaterialTheme.typography.bodyLarge.fontWeight,
-            color = valueTextColor, // Use the dedicated valueTextColor
+            color = valueTextColor,
             modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.Center
         )

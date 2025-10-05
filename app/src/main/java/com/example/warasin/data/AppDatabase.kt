@@ -1,19 +1,19 @@
 package com.example.warasin.data
 
-import androidx.room.*
+import androidx.room.Database
+import androidx.room.RoomDatabase
 import com.example.warasin.data.dao.HealthNoteDao
 import com.example.warasin.data.dao.MedicineDao
 import com.example.warasin.data.model.HealthNote
 import com.example.warasin.data.model.Medicine
-import com.example.warasin.util.ListStringConverter
+import com.example.warasin.data.model.Schedule
 
 @Database(
-    entities = [Medicine::class, HealthNote::class],
-    version = 2,
+    entities = [Medicine::class, Schedule::class, HealthNote::class],
+    version = 5,
     exportSchema = false
 )
-@TypeConverters(ListStringConverter::class)
-public abstract class AppDatabase : RoomDatabase() {
+abstract class AppDatabase : RoomDatabase() {
     abstract fun medicineDao(): MedicineDao
     abstract fun healthNoteDao(): HealthNoteDao
 }

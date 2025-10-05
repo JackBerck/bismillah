@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldColors
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -25,7 +26,14 @@ fun LabeledTextField(
     value: String,
     onValueChange: (String) -> Unit,
     placeholder: String = "",
-    enabled: Boolean = true
+    enabled: Boolean = true,
+    readOnly: Boolean = false,
+    trailingIcon: @Composable (() -> Unit)? = null,
+    colors: TextFieldColors = TextFieldDefaults.colors(
+        focusedIndicatorColor = Blue600,
+        unfocusedIndicatorColor = Gray300,
+        cursorColor = Gray950
+    )
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -41,11 +49,7 @@ fun LabeledTextField(
             value = value,
             onValueChange = onValueChange,
             modifier = Modifier.fillMaxWidth(), // Only fill width, not height
-            colors = TextFieldDefaults.colors(
-                focusedIndicatorColor = Blue600,
-                unfocusedIndicatorColor = Gray300,
-                cursorColor = Gray950
-            ),
+            colors = colors,
             placeholder = {
                 Text(
                     text = placeholder,
@@ -55,7 +59,9 @@ fun LabeledTextField(
             },
             textStyle = MaterialTheme.typography.bodyMedium,
             singleLine = true,
-            enabled = enabled
+            enabled = enabled,
+            readOnly = readOnly,
+            trailingIcon = trailingIcon,
         )
     }
 }

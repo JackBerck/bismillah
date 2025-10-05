@@ -54,7 +54,7 @@ fun HomepageScreen(
     navController: NavController,
     viewModel: HomepageViewModel = hiltViewModel()
 ) {
-    val medicines by viewModel.medicines.collectAsState()
+    val schedules by viewModel.schedules.collectAsState()
 
     Column(
         modifier = Modifier
@@ -105,7 +105,7 @@ fun HomepageScreen(
                 }
                 Spacer(modifier = Modifier.height(24.dp))
 
-                if (medicines.isEmpty()) {
+                if (schedules.isEmpty()) {
                     Text(
                         text = "Belum ada jadwal obat hari ini",
                         style = MaterialTheme.typography.bodyMedium,
@@ -117,14 +117,14 @@ fun HomepageScreen(
                     LazyColumn(
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        items(medicines) { medicine ->
+                        items(schedules) { schedule ->
                             HomeMedicineItem(
-                                medicine = medicine,
+                                schedule = schedule,
                                 onMarkAsTaken = {
-                                    viewModel.markMedicineAsTaken(medicine.id)
+                                    viewModel.markMedicineAsTaken(schedule.schedule.id)
                                 },
                                 onMarkAsNotTaken = {
-                                    viewModel.markMedicineAsNotTaken(medicine.id)
+                                    viewModel.markMedicineAsNotTaken(schedule.schedule.id)
                                 }
                             )
                         }
@@ -275,7 +275,13 @@ fun HomepageScreen(
 
             // Tombol "Tambah Catatan"
             OutlinedButton(
-                onClick = { /*TODO: navController.navigate("add_note_screen") or similar */ },
+                onClick = {
+                    // Now navController is accessible here
+                    navController.navigate("note_screen") {
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                },
                 shape = RoundedCornerShape(12.dp),
                 border = BorderStroke(1.dp, Blue600),
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = Blue600),
