@@ -13,6 +13,7 @@ import com.example.warasin.ui.homepage.HomepageScreen
 import com.example.warasin.ui.medicine.MedicineScreen
 import com.example.warasin.ui.navigation.MyBottomNavigationBar
 import com.example.warasin.ui.profile.ProfileScreen
+import com.example.warasin.ui.schedule.ScheduleScreen
 
 @Composable
 fun MainScreen(onLogout: () -> Unit) {
@@ -31,6 +32,10 @@ fun MainScreen(onLogout: () -> Unit) {
                     navController = navController,
                     viewModel = hiltViewModel()
                 )
+            }
+
+            composable("schedule_screen") {
+                ScheduleScreen()
             }
 
             composable("medicine_screen") {

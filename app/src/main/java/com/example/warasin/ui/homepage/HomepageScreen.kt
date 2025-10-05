@@ -48,13 +48,18 @@ import com.example.warasin.ui.theme.Gray50
 import com.example.warasin.ui.theme.Green100
 import com.example.warasin.ui.theme.Green600
 import androidx.navigation.compose.rememberNavController // Import for Preview
+import com.example.warasin.ui.auth.AuthViewModel
 
 @Composable
 fun HomepageScreen(
     navController: NavController,
-    viewModel: HomepageViewModel = hiltViewModel()
+    viewModel: HomepageViewModel = hiltViewModel(),
+    authViewModel: AuthViewModel = hiltViewModel()
 ) {
     val schedules by viewModel.schedules.collectAsState()
+    val (userId, userName, userEmail) = authViewModel.getCurrentUserData()
+
+    val displayName = userName.ifEmpty { "User" }
 
     Column(
         modifier = Modifier
@@ -62,7 +67,7 @@ fun HomepageScreen(
             .padding(24.dp)
     ) {
         Text(
-            text = "Selamat Pagi, Zaki!",
+            text = "Selamat Pagi, $displayName!",
             style = MaterialTheme.typography.titleLarge
         )
         Spacer(modifier = Modifier.height(4.dp))
@@ -241,7 +246,6 @@ fun HomepageScreen(
             // Tombol "Tambah Obat"
             Button(
                 onClick = {
-                    // Now navController is accessible here
                     navController.navigate("medicine_screen") {
                         launchSingleTop = true
                         restoreState = true
@@ -307,15 +311,5 @@ fun HomepageScreen(
                 }
             }
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun HomepageScreenPreview() {
-    WarasInTheme {
-        // For preview, you can use a rememberNavController or a fake NavController if needed
-        val navController = rememberNavController()
-        HomepageScreen(navController = navController)
     }
 }

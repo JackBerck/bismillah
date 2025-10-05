@@ -2,6 +2,7 @@ package com.example.warasin.ui.auth
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.warasin.data.preferences.UserPreferences
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.UserProfileChangeRequest
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -13,7 +14,9 @@ import javax.inject.Inject
 import com.google.firebase.auth.AuthCredential
 
 @HiltViewModel
-class AuthViewModel @Inject constructor() : ViewModel() {
+class AuthViewModel @Inject constructor(
+    private val userPreferences: UserPreferences // Inject UserPreferences
+) : ViewModel() {
 
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
 
@@ -22,22 +25,55 @@ class AuthViewModel @Inject constructor() : ViewModel() {
 
     fun onEvent(event: AuthEvent) {
         when (event) {
-            is AuthEvent.OnFullNameChange -> _uiState.update { it.copy(fullName = event.value) }
-            is AuthEvent.OnEmailChange -> _uiState.update { it.copy(email = event.value) }
-            is AuthEvent.OnPasswordChange -> _uiState.update { it.copy(password = event.value) }
-            is AuthEvent.OnConfirmPasswordChange -> _uiState.update { it.copy(confirmPassword = event.value) }
-            is AuthEvent.ToggleShowPassword -> _uiState.update { it.copy(showPassword = !it.showPassword) }
-            is AuthEvent.ToggleShowConfirmPassword -> _uiState.update { it.copy(showConfirmPassword = !it.showConfirmPassword) }
-            is AuthEvent.OnTermsAgreeChange -> _uiState.update { it.copy(agreedToTerms = event.value) }
-            is AuthEvent.RegisterClick -> registerUser()
-            is AuthEvent.ErrorShown -> _uiState.update { it.copy(registrationError = null) }
-            is AuthEvent.LoginClick -> loginWithEmail()
-            is AuthEvent.ErrorShown -> _uiState.update { it.copy(registrationError = null) }
+            is AuthEvent.OnFullNameChange -> {
+                _uiState.update { it.copy(fullName = event.value) }
+            }
+            is AuthEvent.OnEmailChange -> {
+                _uiState.update { it.copy(email = event.value) }
+            }
+            is AuthEvent.OnPasswordChange -> {
+                _uiState.update { it.copy(password = event.value) }
+            }
+            is AuthEvent.OnConfirmPasswordChange -> {
+                _uiState.update { it.copy(confirmPassword = event.value) }
+            }
+            AuthEvent.ToggleShowPassword -> {
+                _uiState.update { it.copy(showPassword = !it.showPassword) }
+            }
+            AuthEvent.ToggleShowConfirmPassword -> {
+                _uiState.update { it.copy(showConfirmPassword = !it.showConfirmPassword) }
+            }
+            is AuthEvent.OnTermsAgreeChange -> {
+                _uiState.update { it.copy(agreedToTerms = event.value) }
+            }
+            AuthEvent.RegisterClick -> {
+                registerUser()
+            }
+            AuthEvent.LoginClick -> {
+                loginWithEmail()
+            }
+            AuthEvent.ErrorShown -> {
+                _uiState.update { it.copy(registrationError = null) }
+            }
         }
     }
 
+    // Check if user is already logged in
+    fun checkAuthState(): Boolean {
+        val currentUser = auth.currentUser
+        return currentUser != null && userPreferences.isLoggedIn()
+    }
+
+    // Get current user data
+    fun getCurrentUserData(): Triple<String, String, String> {
+        return Triple(
+            userPreferences.getUserId(),
+            userPreferences.getUserName(),
+            userPreferences.getUserEmail()
+        )
+    }
+
     private fun registerUser() {
-        // Ambil state saat ini
         val currentState = _uiState.value
         val fullName = currentState.fullName.trim()
         val email = currentState.email.trim()
@@ -64,6 +100,14 @@ class AuthViewModel @Inject constructor() : ViewModel() {
                     val user = auth.currentUser
                     val profileUpdates = UserProfileChangeRequest.Builder().setDisplayName(fullName).build()
                     user?.updateProfile(profileUpdates)?.addOnCompleteListener {
+                        // Save user data to preferences
+                        user.let {
+                            userPreferences.saveUserData(
+                                userId = it.uid,
+                                userName = fullName,
+                                userEmail = email
+                            )
+                        }
                         _uiState.update { it.copy(isLoading = false, registrationSuccess = true) }
                     }
                 } else {
@@ -87,6 +131,15 @@ class AuthViewModel @Inject constructor() : ViewModel() {
         auth.signInWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
+                    val user = auth.currentUser
+                    user?.let {
+                        // Save user data to preferences
+                        userPreferences.saveUserData(
+                            userId = it.uid,
+                            userName = it.displayName ?: "",
+                            userEmail = it.email ?: ""
+                        )
+                    }
                     _uiState.update { it.copy(isLoading = false, registrationSuccess = true) }
                 } else {
                     _uiState.update { it.copy(isLoading = false, registrationError = task.exception?.message) }
@@ -99,10 +152,24 @@ class AuthViewModel @Inject constructor() : ViewModel() {
         auth.signInWithCredential(credential)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
+                    val user = auth.currentUser
+                    user?.let {
+                        // Save user data to preferences
+                        userPreferences.saveUserData(
+                            userId = it.uid,
+                            userName = it.displayName ?: "",
+                            userEmail = it.email ?: ""
+                        )
+                    }
                     _uiState.update { it.copy(isLoading = false, registrationSuccess = true) }
                 } else {
                     _uiState.update { it.copy(isLoading = false, registrationError = task.exception?.message) }
                 }
             }
+    }
+
+    fun logout() {
+        auth.signOut()
+        userPreferences.clearUserData()
     }
 }
