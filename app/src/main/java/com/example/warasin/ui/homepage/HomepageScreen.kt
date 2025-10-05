@@ -51,7 +51,7 @@ import androidx.navigation.compose.rememberNavController // Import for Preview
 
 @Composable
 fun HomepageScreen(
-    navController: NavController, // Add NavController as a parameter
+    navController: NavController,
     viewModel: HomepageViewModel = hiltViewModel()
 ) {
     val medicines by viewModel.medicines.collectAsState()
@@ -304,7 +304,7 @@ fun HomepageScreen(
     }
 }
 
-@Preview(showBackground = true, device = "spec:width=411dp,height=891dp")
+@Preview(showBackground = true)
 @Composable
 fun HomepageScreenPreview() {
     WarasInTheme {

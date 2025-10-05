@@ -48,7 +48,7 @@ import com.example.warasin.ui.theme.Green600
 import com.example.warasin.ui.theme.Red600
 
 @Composable
-fun ProfileScreen() {
+fun ProfileScreen(onLogout: () -> Unit = {}) {
     var name by remember { mutableStateOf("Wrench") } // Initial value example
     var email by remember { mutableStateOf("wrench@watchdog.com") } // Initial value example
     var age by remember { mutableStateOf("21") } // Initial value example

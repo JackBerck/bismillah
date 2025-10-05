@@ -5,8 +5,9 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import com.example.warasin.ui.theme.WarasInTheme
-import com.namaanda.aplikasianda.ui.presentation.MainScreen
 import dagger.hilt.android.AndroidEntryPoint
+import androidx.navigation.compose.rememberNavController
+import com.example.warasin.ui.navigation.AppNavigation
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -15,7 +16,8 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             WarasInTheme {
-                MainScreen()
+                val navController = rememberNavController()
+                AppNavigation(navController = navController)
             }
         }
     }
