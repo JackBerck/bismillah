@@ -1,8 +1,10 @@
 package com.example.warasin.ui.auth
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.warasin.data.preferences.UserPreferences
+import com.example.warasin.data.repository.HealthNoteRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.UserProfileChangeRequest
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -116,6 +118,7 @@ class AuthViewModel @Inject constructor(
             }
     }
 
+    @Inject lateinit var repository: HealthNoteRepository
     private fun loginWithEmail() {
         val currentState = _uiState.value
         val email = currentState.email.trim()
@@ -133,12 +136,28 @@ class AuthViewModel @Inject constructor(
                 if (task.isSuccessful) {
                     val user = auth.currentUser
                     user?.let {
-                        // Save user data to preferences
                         userPreferences.saveUserData(
                             userId = it.uid,
                             userName = it.displayName ?: "",
                             userEmail = it.email ?: ""
                         )
+
+                        // Sync user data to Firestore and sync health notes
+                        viewModelScope.launch {
+                            try {
+                                repository.syncUserToFirestore(
+                                    userId = it.uid,
+                                    name = it.displayName ?: "",
+                                    email = it.email ?: ""
+                                )
+
+                                // Sync health notes from Firestore after login
+                                repository.syncHealthNotesFromFirestore()
+
+                            } catch (e: Exception) {
+                                Log.e("AuthViewModel", "Sync error after login: ${e.message}")
+                            }
+                        }
                     }
                     _uiState.update { it.copy(isLoading = false, registrationSuccess = true) }
                 } else {

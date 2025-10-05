@@ -1,8 +1,10 @@
 package com.example.warasin.ui.healthnotes
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.warasin.data.dao.HealthNoteDao
+import com.example.warasin.data.preferences.UserPreferences
+import com.example.warasin.data.repository.HealthNoteRepository
 import com.example.warasin.data.model.HealthNote
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
@@ -12,38 +14,63 @@ import javax.inject.Inject
 
 @HiltViewModel
 class HealthNotesViewModel @Inject constructor(
-    private val healthNoteDao: HealthNoteDao
+    private val repository: HealthNoteRepository,
+    private val userPreferences: UserPreferences
 ) : ViewModel() {
 
-    val healthNotes = healthNoteDao.getAllHealthNote()
+    private val userId = userPreferences.getUserId()
+
+    val healthNotes = repository.getHealthNotesByUserId(userId)
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000L),
             initialValue = emptyList()
         )
 
-    fun addHealthNote(bloodPressure: String, bloodSugar: String, bodyTemperature: String, mood: String, notes: String) {
+    init {
+        // Sync data both ways when ViewModel is created
+        syncData()
+    }
+
+    private fun syncData() {
         viewModelScope.launch {
-            val healthNote = HealthNote(
-                bloodPressure = bloodPressure,
-                bloodSugar = bloodSugar,
-                bodyTemperature = bodyTemperature,
-                mood = mood,
-                notes = notes,
-            )
-            healthNoteDao.insertHealthNote(healthNote)
+            try {
+                // First, sync FROM Firestore TO Local
+                repository.syncHealthNotesFromFirestore()
+
+                // Then, sync unsynced local data TO Firestore
+                repository.syncAllUnsyncedHealthNotes()
+            } catch (e: Exception) {
+                Log.e("HealthNotesViewModel", "Sync error: ${e.message}")
+            }
         }
     }
 
-    fun deleteHealthNote(healthNote: HealthNote) {
+    fun addHealthNote(
+        bloodPressure: String,
+        bloodSugar: String,
+        bodyTemperature: String,
+        mood: String,
+        notes: String
+    ) {
         viewModelScope.launch {
-            healthNoteDao.deleteHealthNote(healthNote)
+            repository.addHealthNote(bloodPressure, bloodSugar, bodyTemperature, mood, notes)
         }
     }
 
     fun updateHealthNote(healthNote: HealthNote) {
         viewModelScope.launch {
-            healthNoteDao.insertHealthNote(healthNote) // `insert` dengan `onConflict` akan menggantikan data lama
+            repository.updateHealthNote(healthNote)
         }
+    }
+
+    fun deleteHealthNote(healthNote: HealthNote) {
+        viewModelScope.launch {
+            repository.deleteHealthNote(healthNote)
+        }
+    }
+
+    fun forceSyncData() {
+        syncData()
     }
 }
