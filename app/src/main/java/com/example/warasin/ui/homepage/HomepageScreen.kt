@@ -6,6 +6,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -28,18 +29,15 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.example.warasin.R
 import com.example.warasin.data.model.HealthNote
-import com.example.warasin.data.model.ScheduleWithMedicine
 import com.example.warasin.ui.auth.AuthViewModel
 import com.example.warasin.ui.theme.Blue100
 import com.example.warasin.ui.theme.Blue600
@@ -47,8 +45,8 @@ import com.example.warasin.ui.theme.Gray300
 import com.example.warasin.ui.theme.Gray50
 import com.example.warasin.ui.theme.Green100
 import com.example.warasin.ui.theme.Green600
-import com.example.warasin.ui.theme.WarasInTheme
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
@@ -60,197 +58,193 @@ fun HomepageScreen(
 ) {
     val schedules by viewModel.schedules.collectAsState()
     val healthNotes by viewModel.healthNotes.collectAsState()
-    val (userId, userName, userEmail) = authViewModel.getCurrentUserData()
+    val (_, userName) = authViewModel.getCurrentUserData()
 
     val displayName = userName.ifEmpty { "User" }
+    val calendar = Calendar.getInstance()
 
-    // Ambil jadwal untuk hari ini dan belum diminum
+    val greeting = when (calendar.get(Calendar.HOUR_OF_DAY)) {
+        in 0..10 -> "Selamat Pagi"
+        in 11..14 -> "Selamat Siang"
+        in 15..17 -> "Selamat Sore"
+        else -> "Selamat Malam"
+    }
+
     val todaySchedules = schedules.filter { scheduleWithMedicine ->
-        !scheduleWithMedicine.schedule.isTaken
-    }.take(3) // Ambil 3 jadwal terbaru
+        val todayId = calendar.get(Calendar.DAY_OF_WEEK)
+        val todayInYourSystem = when (todayId) {
+            Calendar.MONDAY -> 1
+            Calendar.TUESDAY -> 2
+            Calendar.WEDNESDAY -> 3
+            Calendar.THURSDAY -> 4
+            Calendar.FRIDAY -> 5
+            Calendar.SATURDAY -> 6
+            Calendar.SUNDAY -> 7
+            else -> -1
+        }
+        val daysString = scheduleWithMedicine.schedule.selectedDays
+        val daysList = if (daysString.isNotBlank()) daysString.split(',') else emptyList()
+        daysList.contains(todayInYourSystem.toString())
+    }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp)
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(24.dp),
+        verticalArrangement = Arrangement.spacedBy(32.dp)
     ) {
-        Text(
-            text = "Selamat Pagi, $displayName!",
-            style = MaterialTheme.typography.titleLarge
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = "Jangan lupa minum obat hari ini dan tetap jaga kesehatan ya!",
-            style = MaterialTheme.typography.bodyMedium
-        )
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .border(
-                    BorderStroke(1.dp, Gray300),
-                    shape = RoundedCornerShape(8.dp)
+        item {
+            Column {
+                Text(
+                    text = "$greeting, $displayName!",
+                    style = MaterialTheme.typography.titleLarge
                 )
-                .padding(16.dp)
-        ) {
-            Column(
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Jangan lupa minum obat hari ini dan tetap jaga kesehatan ya!",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+        }
+
+        item {
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .align(Alignment.CenterStart)
+                    .border(BorderStroke(1.dp, Gray300), shape = RoundedCornerShape(8.dp))
+                    .padding(16.dp)
             ) {
-                Row(
-                    Modifier.fillMaxWidth(),
+                Column(
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.baseline_calendar_today_24),
-                        contentDescription = "Calendar Icon",
-                        tint = Blue600,
-                        modifier = Modifier.size(24.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = " Jadwal Minum Obat",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontSize = 20.sp,
-                    )
-                }
-                Spacer(modifier = Modifier.height(24.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.baseline_calendar_today_24),
+                            contentDescription = "Calendar Icon",
+                            tint = Blue600,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Jadwal Minum Obat",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontSize = 20.sp,
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(24.dp))
 
-                if (schedules.isEmpty()) {
+                    if (todaySchedules.isEmpty()) {
+                        Text(
+                            text = "Belum ada jadwal obat hari ini",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Gray300,
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = TextAlign.Center
+                        )
+                    } else {
+                        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                            todaySchedules.forEach { schedule ->
+                                HomeMedicineItem(
+                                    schedule = schedule,
+                                    onMarkAsTaken = { viewModel.markScheduleAsTaken(schedule.schedule.id) },
+                                    onMarkAsNotTaken = { viewModel.markScheduleAsNotTaken(schedule.schedule.id) }
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        item {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .border(BorderStroke(1.dp, Gray300), shape = RoundedCornerShape(8.dp))
+                    .padding(16.dp)
+            ) {
+                if (healthNotes.isNotEmpty()) {
+                    RecentHealthNotesSection(healthNotes = healthNotes[0])
+                } else {
                     Text(
-                        text = "Belum ada jadwal obat hari ini",
+                        text = "Belum ada catatan kesehatan",
                         style = MaterialTheme.typography.bodyMedium,
                         color = Gray300,
                         modifier = Modifier.fillMaxWidth(),
                         textAlign = TextAlign.Center
                     )
-                } else {
-                    LazyColumn(
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                }
+            }
+        }
+
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Button(
+                    onClick = {
+                        navController.navigate("medicine_screen") {
+                            popUpTo("homepage") { inclusive = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Blue600),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center,
+                        modifier = Modifier.padding(vertical = 8.dp)
                     ) {
-                        items(schedules) { schedule ->
-                            HomeMedicineItem(
-                                schedule = schedule,
-                                onMarkAsTaken = {
-                                    viewModel.markScheduleAsTaken(schedule.schedule.id)
-                                },
-                                onMarkAsNotTaken = {
-                                    viewModel.markScheduleAsNotTaken(schedule.schedule.id)
-                                }
-                            )
-                        }
+                        Icon(
+                            painter = painterResource(id = R.drawable.baseline_add_24),
+                            contentDescription = null,
+                            tint = Gray50
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "Tambah Obat",
+                            color = Gray50,
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold,
+                        )
                     }
                 }
-            }
-        }
 
-        Spacer(modifier = Modifier.height(32.dp))
-
-        // Status Kesehatan
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .border(
-                    BorderStroke(1.dp, Gray300),
-                    shape = RoundedCornerShape(8.dp)
-                )
-                .padding(16.dp)
-        ) {
-            if (healthNotes.isNotEmpty()) {
-                RecentHealthNotesSection(
-                    healthNotes = healthNotes[0],
-                )
-            } else {
-                Text(
-                    text = "Belum ada catatan kesehatan",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Gray300,
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        // --- Baris Tombol Aksi ---
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            // Tombol "Tambah Obat"
-            Button(
-                onClick = {
-                    navController.navigate("medicine_screen") {
-                        launchSingleTop = true
-                        restoreState = true
-                        popUpTo("home_screen") {
-                            inclusive = true
+                OutlinedButton(
+                    onClick = {
+                        navController.navigate("note_screen") {
+                            popUpTo("homepage") { inclusive = true }
+                            launchSingleTop = true
+                            restoreState = true
                         }
-                    }
-                },
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Blue600),
-                modifier = Modifier
-                    .weight(1f)
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
+                    },
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, Blue600),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Blue600),
+                    modifier = Modifier.weight(1f)
                 ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.baseline_add_24),
-                        contentDescription = null,
-                        tint = Gray50
-                    )
-                    Spacer(
-                        modifier = Modifier.width(8.dp) // This was height, changed to width for horizontal spacing
-                    )
-                    Text(
-                        text = "Tambah Obat",
-                        color = Gray50,
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = MaterialTheme.typography.bodyLarge.fontWeight,
-                    )
-                }
-            }
-
-            // Tombol "Tambah Catatan"
-            OutlinedButton(
-                onClick = {
-                    // Now navController is accessible here
-                    navController.navigate("note_screen") {
-                        launchSingleTop = true
-                        restoreState = true
-                        popUpTo("home_screen") {
-                            inclusive = true
-                        }
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.outline_add_notes_24),
+                            contentDescription = null
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "Tambah Catatan",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold,
+                        )
                     }
-                },
-                shape = RoundedCornerShape(12.dp),
-                border = BorderStroke(1.dp, Blue600),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = Blue600),
-                modifier = Modifier
-                    .weight(1f)
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.outline_add_notes_24),
-                        contentDescription = null
-                    )
-                    Spacer(
-                        modifier = Modifier.width(8.dp) // This was height, changed to width for horizontal spacing
-                    )
-                    Text(
-                        text = "Tambah Catatan",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = MaterialTheme.typography.bodyLarge.fontWeight,
-                    )
                 }
             }
         }
@@ -258,21 +252,17 @@ fun HomepageScreen(
 }
 
 @Composable
-private fun RecentHealthNotesSection(
-    healthNotes: HealthNote,
-) {
+private fun RecentHealthNotesSection(healthNotes: HealthNote) {
     val dateFormatter = SimpleDateFormat("dd MMM yyyy", Locale("id", "ID"))
 
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-    ) {
+    Column(modifier = Modifier.fillMaxWidth()) {
         Row(
-            Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.outline_trending_up_24),
-                contentDescription = "Calendar Icon",
+                contentDescription = "Trending Icon",
                 tint = Green600,
                 modifier = Modifier.size(24.dp)
             )
@@ -285,65 +275,60 @@ private fun RecentHealthNotesSection(
         }
         Spacer(modifier = Modifier.height(24.dp))
         Row(
-            horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(
                 modifier = Modifier
                     .weight(1f)
-                    .align(Alignment.CenterVertically)
                     .background(Blue100, shape = RoundedCornerShape(8.dp))
                     .padding(12.dp)
-                    .fillMaxWidth()
             ) {
                 Text(
                     text = "Tekanan Darah",
                     style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = "${healthNotes.bloodPressure} mmHg",
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = MaterialTheme.typography.bodyLarge.fontWeight,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.SemiBold,
                     color = Blue600,
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
             Column(
                 modifier = Modifier
                     .weight(1f)
-                    .align(Alignment.CenterVertically)
                     .background(Green100, shape = RoundedCornerShape(8.dp))
                     .padding(12.dp)
-                    .fillMaxWidth()
             ) {
                 Text(
                     text = "Gula Darah",
                     style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = "${healthNotes.bloodSugar} mg/dL",
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = MaterialTheme.typography.bodyLarge.fontWeight,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.SemiBold,
                     color = Green600,
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
         }
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text = dateFormatter.format(Date(healthNotes.timestamp)),
+            text = "Terakhir diperbarui: ${dateFormatter.format(Date(healthNotes.timestamp))}",
             style = MaterialTheme.typography.bodySmall,
-            modifier = Modifier
-                .fillMaxWidth(),
             textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth()
         )
     }
 }
