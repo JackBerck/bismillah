@@ -4,6 +4,8 @@ import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
@@ -15,6 +17,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -23,6 +28,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -37,6 +43,7 @@ fun RegistrationScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
+    var showTermsDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(key1 = uiState.registrationError) {
         uiState.registrationError?.let {
@@ -49,6 +56,40 @@ fun RegistrationScreen(
             Toast.makeText(context, "Pendaftaran Berhasil!", Toast.LENGTH_SHORT).show()
             onRegisterSuccess()
         }
+    }
+
+    if (showTermsDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                showTermsDialog = false
+            },
+            title = {
+                Text("Syarat & Ketentuan", style = MaterialTheme.typography.titleLarge)
+            },
+            text = {
+                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                    Text(
+                        text = "Dengan mendaftar dan menggunakan aplikasi WarasIn, Anda setuju untuk:\n\n" +
+                                "1. Memberikan informasi yang akurat dan benar saat pendaftaran.\n" +
+                                "2. Menjaga kerahasiaan kata sandi dan keamanan akun Anda.\n" +
+                                "3. Tidak menyalahgunakan platform untuk tujuan yang melanggar hukum.\n" +
+                                "4. Memahami bahwa informasi kesehatan yang Anda masukkan dikelola dengan aman dan tidak akan dibagikan tanpa persetujuan Anda, sesuai dengan kebijakan privasi kami.\n\n" +
+                                "Pelanggaran terhadap syarat dan ketentuan ini dapat mengakibatkan penangguhan atau penghapusan akun Anda.",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        // Aksi saat tombol konfirmasi ditekan
+                        showTermsDialog = false
+                    }
+                ) {
+                    Text("Oke, Saya Mengerti")
+                }
+            }
+        )
     }
 
     Column(
@@ -159,8 +200,10 @@ fun RegistrationScreen(
             )
             Text(
                 "Setujui syarat & ketentuan",
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.offset(x = (-16).dp),
+                style = MaterialTheme.typography.bodyMedium, textDecoration = TextDecoration.Underline,
+                modifier = Modifier
+                    .offset(x = (-16).dp)
+                    .clickable { showTermsDialog = true },
                 color = Blue600
             )
         }

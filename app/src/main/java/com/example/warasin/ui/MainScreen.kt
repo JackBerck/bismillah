@@ -13,7 +13,9 @@ import com.example.warasin.ui.homepage.HomepageScreen
 import com.example.warasin.ui.medicine.MedicineScreen
 import com.example.warasin.ui.navigation.MyBottomNavigationBar
 import com.example.warasin.ui.profile.ProfileScreen
+import com.example.warasin.ui.profile.SecurityPrivacyScreen
 import com.example.warasin.ui.schedule.ScheduleScreen
+import com.example.warasin.ui.profile.HelpSupportScreen
 
 @Composable
 fun MainScreen(onLogout: () -> Unit) {
@@ -47,7 +49,15 @@ fun MainScreen(onLogout: () -> Unit) {
             }
 
             composable("profile_screen") {
-                ProfileScreen(onLogout = onLogout)
+                ProfileScreen(onLogout = onLogout, navController = navController)
+            }
+
+            composable("securityprivacy_screen"){
+                SecurityPrivacyScreen(navController = navController)
+            }
+
+            composable("helpsupport_screen"){
+                HelpSupportScreen(navController = navController)
             }
         }
     }

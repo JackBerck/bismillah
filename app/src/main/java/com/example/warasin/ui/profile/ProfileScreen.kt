@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.clickable
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -37,6 +38,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.example.warasin.R
 import com.example.warasin.ui.component.ButtonWithoutIcon
 import com.example.warasin.ui.component.LabeledTextField
@@ -46,9 +49,10 @@ import com.example.warasin.ui.theme.Gray50
 import com.example.warasin.ui.theme.Gray950
 import com.example.warasin.ui.theme.Green600
 import com.example.warasin.ui.theme.Red600
+import com.example.warasin.ui.theme.WarasInTheme
 
 @Composable
-fun ProfileScreen(onLogout: () -> Unit = {}) {
+fun ProfileScreen(onLogout: () -> Unit = {}, navController: NavHostController) {
     var name by remember { mutableStateOf("Wrench") } // Initial value example
     var email by remember { mutableStateOf("wrench@watchdog.com") } // Initial value example
     var age by remember { mutableStateOf("21") } // Initial value example
@@ -241,7 +245,7 @@ fun ProfileScreen(onLogout: () -> Unit = {}) {
                 title = "Keamanan & Privasi",
                 iconResId = R.drawable.outline_shield_24,
                 iconTint = Gray950,
-                onClick = { /* TODO: Navigate to Security & Privacy */ }
+                onClick = { navController.navigate("securityprivacy_screen") }
             )
         }
 
@@ -254,7 +258,7 @@ fun ProfileScreen(onLogout: () -> Unit = {}) {
                 title = "Bantuan & Dukungan",
                 iconResId = R.drawable.outline_question_mark_24,
                 iconTint = Gray950,
-                onClick = { /* TODO: Navigate to Help & Support */ }
+                onClick = { navController.navigate("helpsupport_screen") }
             )
         }
 
@@ -285,6 +289,8 @@ fun ProfileSectionItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clip(RoundedCornerShape(8.dp))
+            .clickable { onClick() }
             .border(BorderStroke(1.dp, Gray300), shape = RoundedCornerShape(8.dp))
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -312,8 +318,12 @@ fun ProfileSectionItem(
 @Preview(showBackground = true)
 @Composable
 fun ProfileScreenPreview() {
-    MaterialTheme {
-        ProfileScreen()
+    WarasInTheme {
+        val navController = rememberNavController()
+        ProfileScreen(
+            onLogout = {},
+            navController = navController
+        )
     }
 }
 
