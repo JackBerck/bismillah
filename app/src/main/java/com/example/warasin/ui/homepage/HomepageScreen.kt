@@ -58,8 +58,9 @@ fun HomepageScreen(
 ) {
     val schedules by viewModel.schedules.collectAsState()
     val healthNotes by viewModel.healthNotes.collectAsState()
-    val (_, userName) = authViewModel.getCurrentUserData()
+    val currentUserData = authViewModel.getCurrentUserData()
 
+    val userName = currentUserData.second
     val displayName = userName.ifEmpty { "User" }
     val calendar = Calendar.getInstance()
 

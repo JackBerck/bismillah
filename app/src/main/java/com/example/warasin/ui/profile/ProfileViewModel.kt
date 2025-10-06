@@ -1,10 +1,13 @@
 package com.example.warasin.ui.profile
 
 import android.net.Uri
+import android.util.Log // <-- Import Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.warasin.data.preferences.UserPreferences
+import com.example.warasin.data.repository.AuthRepository
 import com.example.warasin.data.repository.HealthNoteRepository
+import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -25,6 +28,7 @@ data class ProfileState(
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
+    private val authRepository: AuthRepository,
     private val userPreferences: UserPreferences,
     private val repository: HealthNoteRepository
 ) : ViewModel() {
@@ -37,6 +41,7 @@ class ProfileViewModel @Inject constructor(
     }
 
     private fun loadUserProfile() {
+        val (userId, userName, userEmail) = authRepository.getCurrentUserData()
         _uiState.update {
             it.copy(
                 name = userPreferences.getUserName(),
@@ -120,6 +125,12 @@ class ProfileViewModel @Inject constructor(
     }
 
     fun logout() {
-        userPreferences.clearUserData()
+        viewModelScope.launch {
+            try {
+                authRepository.logout()
+            } catch (e: Exception) {
+                Log.e("ProfileViewModel", "Logout error: ${e.message}")
+            }
+        }
     }
 }

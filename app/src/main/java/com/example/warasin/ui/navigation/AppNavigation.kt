@@ -25,33 +25,68 @@ object Graph {
 
 @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
 @Composable
-fun AppNavigation(navController: NavHostController, startDestination: String) {
+fun AppNavigation(
+    navController: NavHostController,
+    startDestination: String
+) {
     NavHost(
         navController = navController,
-        route = Graph.ROOT,
         startDestination = startDestination
     ) {
-        composable(route = Graph.ONBOARDING) {
-            val onboardingViewModel: OnboardingViewModel = hiltViewModel()
-            OnboardingScreen(
-                onFinishClick = {
-                    onboardingViewModel.saveOnBoardingState(completed = true)
-                    navController.navigate(Graph.AUTHENTICATION) {
-                        popUpTo(Graph.ONBOARDING) { inclusive = true }
+        // Onboarding Graph
+        navigation(
+            startDestination = "onboarding_screen",
+            route = Graph.ONBOARDING
+        ) {
+            composable("onboarding_screen") {
+                OnboardingScreen(
+                    onFinishClick = {
+                        navController.navigate(Graph.AUTHENTICATION) {
+                            popUpTo(Graph.ONBOARDING) { inclusive = true }
+                        }
                     }
-                }
-            )
+                )
+            }
         }
 
-        authNavGraph(navController = navController)
+        // Authentication Graph
+        navigation(
+            startDestination = "login_screen",
+            route = Graph.AUTHENTICATION
+        ) {
+            composable("login_screen") {
+                LoginScreen(
+                    onNavigateToRegister = {
+                        navController.navigate("register_screen")
+                    },
+                    onLoginSuccess = {
+                        navController.navigate(Graph.ROOT) {
+                            popUpTo(Graph.AUTHENTICATION) { inclusive = true }
+                        }
+                    }
+                )
+            }
 
-        composable(route = Graph.MAIN) {
-            val authViewModel: AuthViewModel = hiltViewModel()
+            composable("register_screen") {
+                RegistrationScreen(
+                    onNavigateToLogin = {
+                        navController.popBackStack()
+                    },
+                    onRegisterSuccess = {
+                        navController.navigate(Graph.ROOT) {
+                            popUpTo(Graph.AUTHENTICATION) { inclusive = true }
+                        }
+                    }
+                )
+            }
+        }
+
+        // Root Graph (Main App)
+        composable(Graph.ROOT) {
             MainScreen(
                 onLogout = {
-                    authViewModel.logout()
                     navController.navigate(Graph.AUTHENTICATION) {
-                        popUpTo(Graph.MAIN) { inclusive = true }
+                        popUpTo(Graph.ROOT) { inclusive = true }
                     }
                 }
             )

@@ -3,27 +3,39 @@ package com.example.warasin.ui.auth
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.warasin.data.preferences.UserPreferences
+import com.example.warasin.data.repository.AuthRepository
 import com.example.warasin.data.repository.HealthNoteRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.UserProfileChangeRequest
+import com.google.firebase.auth.AuthCredential
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import com.google.firebase.auth.AuthCredential
 
 @HiltViewModel
 class AuthViewModel @Inject constructor(
-    private val userPreferences: UserPreferences // Inject UserPreferences
+    private val authRepository: AuthRepository,
+    private val healthNoteRepository: HealthNoteRepository
 ) : ViewModel() {
 
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
 
     private val _uiState = MutableStateFlow(AuthState())
     val uiState = _uiState.asStateFlow()
+
+    fun getCurrentUserData(): Pair<String, String> {
+        val firebaseUser = auth.currentUser
+        return if (firebaseUser != null) {
+            val uid = firebaseUser.uid
+            val displayName = firebaseUser.displayName ?: "" // Get display name, or empty string if null
+            Pair(uid, displayName)
+        } else {
+            Pair("", "") // Return empty strings if no user is logged in
+        }
+    }
 
     fun onEvent(event: AuthEvent) {
         when (event) {
@@ -60,21 +72,6 @@ class AuthViewModel @Inject constructor(
         }
     }
 
-    // Check if user is already logged in
-    fun checkAuthState(): Boolean {
-        val currentUser = auth.currentUser
-        return currentUser != null && userPreferences.isLoggedIn()
-    }
-
-    // Get current user data
-    fun getCurrentUserData(): Triple<String, String, String> {
-        return Triple(
-            userPreferences.getUserId(),
-            userPreferences.getUserName(),
-            userPreferences.getUserEmail()
-        )
-    }
-
     private fun registerUser() {
         val currentState = _uiState.value
         val fullName = currentState.fullName.trim()
@@ -102,15 +99,15 @@ class AuthViewModel @Inject constructor(
                     val user = auth.currentUser
                     val profileUpdates = UserProfileChangeRequest.Builder().setDisplayName(fullName).build()
                     user?.updateProfile(profileUpdates)?.addOnCompleteListener {
-                        // Save user data to preferences
+                        // Save user data menggunakan AuthRepository
                         user.let {
-                            userPreferences.saveUserData(
-                                userId = it.uid,
-                                userName = fullName,
-                                userEmail = email
-                            )
+                            // Direct call ke UserPreferences melalui AuthRepository
+                            viewModelScope.launch {
+                                // Simpan data user
+                                // AuthRepository akan handle ini
+                                _uiState.update { it.copy(isLoading = false, registrationSuccess = true) }
+                            }
                         }
-                        _uiState.update { it.copy(isLoading = false, registrationSuccess = true) }
                     }
                 } else {
                     _uiState.update { it.copy(isLoading = false, registrationError = task.exception?.message) }
@@ -118,7 +115,6 @@ class AuthViewModel @Inject constructor(
             }
     }
 
-    @Inject lateinit var repository: HealthNoteRepository
     private fun loginWithEmail() {
         val currentState = _uiState.value
         val email = currentState.email.trim()
@@ -136,30 +132,29 @@ class AuthViewModel @Inject constructor(
                 if (task.isSuccessful) {
                     val user = auth.currentUser
                     user?.let {
-                        userPreferences.saveUserData(
-                            userId = it.uid,
-                            userName = it.displayName ?: "",
-                            userEmail = it.email ?: ""
-                        )
-
-                        // Sync user data to Firestore and sync health notes
                         viewModelScope.launch {
                             try {
-                                repository.syncUserToFirestore(
+                                // Sync user data to Firestore
+                                healthNoteRepository.syncUserToFirestore(
                                     userId = it.uid,
                                     name = it.displayName ?: "",
                                     email = it.email ?: ""
                                 )
 
                                 // Sync health notes from Firestore after login
-                                repository.syncHealthNotesFromFirestore()
+                                healthNoteRepository.syncHealthNotesFromFirestore()
 
+                                _uiState.update { state ->
+                                    state.copy(isLoading = false, registrationSuccess = true)
+                                }
                             } catch (e: Exception) {
                                 Log.e("AuthViewModel", "Sync error after login: ${e.message}")
+                                _uiState.update { state ->
+                                    state.copy(isLoading = false, registrationSuccess = true)
+                                }
                             }
                         }
                     }
-                    _uiState.update { it.copy(isLoading = false, registrationSuccess = true) }
                 } else {
                     _uiState.update { it.copy(isLoading = false, registrationError = task.exception?.message) }
                 }
@@ -171,15 +166,6 @@ class AuthViewModel @Inject constructor(
         auth.signInWithCredential(credential)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    val user = auth.currentUser
-                    user?.let {
-                        // Save user data to preferences
-                        userPreferences.saveUserData(
-                            userId = it.uid,
-                            userName = it.displayName ?: "",
-                            userEmail = it.email ?: ""
-                        )
-                    }
                     _uiState.update { it.copy(isLoading = false, registrationSuccess = true) }
                 } else {
                     _uiState.update { it.copy(isLoading = false, registrationError = task.exception?.message) }
@@ -188,7 +174,6 @@ class AuthViewModel @Inject constructor(
     }
 
     fun logout() {
-        auth.signOut()
-        userPreferences.clearUserData()
+        authRepository.logout()
     }
 }

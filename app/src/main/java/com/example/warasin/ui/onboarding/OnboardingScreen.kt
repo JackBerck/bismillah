@@ -12,8 +12,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
@@ -47,42 +49,53 @@ fun OnboardingScreen(
     )
     val pagerState = rememberPagerState(pageCount = { pages.size })
 
-    Column(modifier = Modifier.fillMaxSize()) {
-        Box(modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
-            .height(48.dp)
+    // Gunakan Box sebagai root untuk menumpuk elemen
+    Box(modifier = Modifier.fillMaxSize()) {
+
+        // 1. Pager untuk konten utama
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier.fillMaxSize() // Pager mengisi seluruh Box
+        ) { pageIndex ->
+            PagerContent(onboardingPage = pages[pageIndex])
+        }
+
+        // 2. Tombol Skip di kanan atas
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .statusBarsPadding()
+                .padding(horizontal = 8.dp),
+            horizontalArrangement = Arrangement.End
         ) {
-            this@Column.AnimatedVisibility(
-                visible = pagerState.currentPage < pagerState.pageCount - 1,
-                modifier = Modifier.align(Alignment.CenterEnd)) {
+            AnimatedVisibility(visible = pagerState.currentPage < pagerState.pageCount - 1) {
                 TextButton(
                     onClick = onFinishClick,
+                    modifier = Modifier.padding(8.dp)
                 ) {
                     Text("Skip", color = MaterialTheme.colorScheme.primary)
                 }
             }
         }
 
-        HorizontalPager(
-            state = pagerState,
-            modifier = Modifier.weight(1f) // Pager akan mengisi ruang yang tersedia
-        ) { pageIndex ->
-            PagerContent(onboardingPage = pages[pageIndex])
-        }
-        
-        HorizontalPagerIndicator(
-            pagerState = pagerState,
+        // 3. Kelompokkan Indikator dan Tombol Bawah dalam satu Column
+        Column(
             modifier = Modifier
-                .align(Alignment.CenterHorizontally)
-                .padding(bottom = 20.dp)
-        )
-
-        BottomButtons(
-            pagerState = pagerState,
-            onGetStartedClick = onFinishClick,
-            modifier = Modifier.padding(horizontal = 40.dp, vertical = 20.dp)
-        )
+                .align(Alignment.BottomCenter) // Letakkan di bagian bawah Box
+                .fillMaxWidth()
+                .navigationBarsPadding() // Tambahkan padding agar tidak tertutup navigasi sistem
+                .padding(horizontal = 40.dp, vertical = 20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            HorizontalPagerIndicator(
+                pagerState = pagerState
+            )
+            Spacer(modifier = Modifier.height(20.dp)) // Jarak antara indikator dan tombol
+            BottomButtons(
+                pagerState = pagerState,
+                onGetStartedClick = onFinishClick
+            )
+        }
     }
 }
 
@@ -93,25 +106,21 @@ fun PagerContent(onboardingPage: OnboardingPage) {
             .fillMaxSize()
             .padding(horizontal = 40.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.Center // Konten tetap di tengah secara vertikal
     ) {
         Image(
             painter = painterResource(id = onboardingPage.image),
             contentDescription = onboardingPage.title,
             modifier = Modifier.fillMaxWidth(0.8f)
         )
-
         Spacer(modifier = Modifier.height(50.dp))
-
         Text(
             text = onboardingPage.title,
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.titleLarge,
             color = MaterialTheme.colorScheme.onBackground
         )
-
         Spacer(modifier = Modifier.height(15.dp))
-
         Text(
             text = onboardingPage.description,
             textAlign = TextAlign.Center,
@@ -176,38 +185,5 @@ fun HorizontalPagerIndicator(
                     .size(12.dp)
             )
         }
-    }
-}
-
-@Preview(name = "Halaman 1", showBackground = true)
-@Composable
-fun OnboardingPage1Preview() {
-    WarasInTheme {
-        PagerContent(onboardingPage = OnboardingPage.FirstPages)
-    }
-}
-
-@Preview(name = "Halaman 2", showBackground = true)
-@Composable
-fun OnboardingPage2Preview() {
-    WarasInTheme {
-        PagerContent(onboardingPage = OnboardingPage.SecondPages)
-    }
-}
-
-@Preview(name = "Halaman 3", showBackground = true)
-@Composable
-fun OnboardingPage3Preview() {
-    WarasInTheme {
-        PagerContent(onboardingPage = OnboardingPage.ThirdPages)
-    }
-}
-
-// (Opsional) Anda juga bisa tetap memiliki preview untuk layar interaktifnya
-@Preview(name = "Layar Interaktif Penuh", showBackground = true)
-@Composable
-fun OnboardingScreenFullPreview() {
-    WarasInTheme {
-        OnboardingScreen(onFinishClick = {})
     }
 }
