@@ -41,4 +41,16 @@
     <style name="SmallTextStyle" parent="BaseTextStyle">
         <item name="android:textSize">14sp</item>
     </style>
+
+    <!-- Splash Screen -->
+    <style name="Theme.App.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/white</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/logo_warasin</item>
+        <item name="windowSplashScreenAnimationDuration">1000</item>
+        <item name="postSplashScreenTheme">@style/Theme.WarasIn</item>
+    </style>
+
+
+
+
 </resources>
