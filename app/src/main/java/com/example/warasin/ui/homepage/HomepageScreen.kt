@@ -186,6 +186,9 @@ fun HomepageScreen(
                     navController.navigate("medicine_screen") {
                         launchSingleTop = true
                         restoreState = true
+                        popUpTo("home_screen") {
+                            inclusive = true
+                        }
                     }
                 },
                 shape = RoundedCornerShape(12.dp),
@@ -221,6 +224,9 @@ fun HomepageScreen(
                     navController.navigate("note_screen") {
                         launchSingleTop = true
                         restoreState = true
+                        popUpTo("home_screen") {
+                            inclusive = true
+                        }
                     }
                 },
                 shape = RoundedCornerShape(12.dp),
