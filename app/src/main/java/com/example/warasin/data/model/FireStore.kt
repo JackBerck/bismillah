@@ -25,3 +25,26 @@ data class FirestoreHealthNote(
     val timestamp: Timestamp = Timestamp.now(),
     val isSynced: Boolean = false // untuk tracking sync status
 )
+
+data class FirestoreMedicine(
+    @DocumentId
+    val id: String = "",
+    val userId: String = "",
+    val name: String = "",
+    val dosage: String = "",
+    val notes: String = "",
+    val timestamp: Timestamp = Timestamp.now(),
+    val isSynced: Boolean = false
+)
+
+data class FirestoreSchedule(
+    @DocumentId
+    val id: String = "",
+    val userId: String = "",
+    val medicineId: String = "", // Reference to Firestore medicine ID
+    val time: String = "",
+    val selectedDays: String = "",
+    val isTaken: Boolean = false,
+    val timestamp: Timestamp = Timestamp.now(),
+    val isSynced: Boolean = false
+)

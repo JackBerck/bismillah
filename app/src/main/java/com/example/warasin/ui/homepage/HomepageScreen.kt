@@ -19,7 +19,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-// import androidx.compose.material3.ExperimentalMaterial3Api // No longer needed for Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -29,7 +28,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-// import androidx.compose.ui.platform.LocalContext // Not directly used in the provided snippet
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -37,18 +36,21 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.example.warasin.ui.theme.WarasInTheme
+import androidx.navigation.compose.rememberNavController
 import com.example.warasin.R
+import com.example.warasin.data.model.HealthNote
+import com.example.warasin.data.model.ScheduleWithMedicine
+import com.example.warasin.ui.auth.AuthViewModel
 import com.example.warasin.ui.theme.Blue100
 import com.example.warasin.ui.theme.Blue600
-// import com.example.warasin.ui.theme.Gray200 // Not directly used
 import com.example.warasin.ui.theme.Gray300
 import com.example.warasin.ui.theme.Gray50
-// import com.example.warasin.ui.theme.Gray950 // Not directly used
 import com.example.warasin.ui.theme.Green100
 import com.example.warasin.ui.theme.Green600
-import androidx.navigation.compose.rememberNavController // Import for Preview
-import com.example.warasin.ui.auth.AuthViewModel
+import com.example.warasin.ui.theme.WarasInTheme
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun HomepageScreen(
@@ -57,9 +59,15 @@ fun HomepageScreen(
     authViewModel: AuthViewModel = hiltViewModel()
 ) {
     val schedules by viewModel.schedules.collectAsState()
+    val healthNotes by viewModel.healthNotes.collectAsState()
     val (userId, userName, userEmail) = authViewModel.getCurrentUserData()
 
     val displayName = userName.ifEmpty { "User" }
+
+    // Ambil jadwal untuk hari ini dan belum diminum
+    val todaySchedules = schedules.filter { scheduleWithMedicine ->
+        !scheduleWithMedicine.schedule.isTaken
+    }.take(3) // Ambil 3 jadwal terbaru
 
     Column(
         modifier = Modifier
@@ -126,10 +134,10 @@ fun HomepageScreen(
                             HomeMedicineItem(
                                 schedule = schedule,
                                 onMarkAsTaken = {
-                                    viewModel.markMedicineAsTaken(schedule.schedule.id)
+                                    viewModel.markScheduleAsTaken(schedule.schedule.id)
                                 },
                                 onMarkAsNotTaken = {
-                                    viewModel.markMedicineAsNotTaken(schedule.schedule.id)
+                                    viewModel.markScheduleAsNotTaken(schedule.schedule.id)
                                 }
                             )
                         }
@@ -150,88 +158,17 @@ fun HomepageScreen(
                 )
                 .padding(16.dp)
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.CenterStart)
-            ) {
-                Row(
-                    Modifier.fillMaxWidth(),
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.outline_trending_up_24),
-                        contentDescription = "Calendar Icon",
-                        tint = Green600,
-                        modifier = Modifier.size(24.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Status Kesehatan",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontSize = 20.sp,
-                    )
-                }
-                Spacer(modifier = Modifier.height(24.dp))
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .weight(1f)
-                            .align(Alignment.CenterVertically)
-                            .background(Blue100, shape = RoundedCornerShape(8.dp))
-                            .padding(12.dp)
-                            .fillMaxWidth()
-                    ) {
-                        Text(
-                            text = "Tekanan Darah",
-                            style = MaterialTheme.typography.bodyMedium,
-                            modifier = Modifier.fillMaxWidth(),
-                            textAlign = TextAlign.Center
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "120/80 mmHg",
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = MaterialTheme.typography.bodyLarge.fontWeight,
-                            color = Blue600,
-                            modifier = Modifier.fillMaxWidth(),
-                            textAlign = TextAlign.Center
-                        )
-                    }
-                    Column(
-                        modifier = Modifier
-                            .weight(1f)
-                            .align(Alignment.CenterVertically)
-                            .background(Green100, shape = RoundedCornerShape(8.dp))
-                            .padding(12.dp)
-                            .fillMaxWidth()
-                    ) {
-                        Text(
-                            text = "Gula Darah",
-                            style = MaterialTheme.typography.bodyMedium,
-                            modifier = Modifier.fillMaxWidth(),
-                            textAlign = TextAlign.Center
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "95 mg/dL",
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = MaterialTheme.typography.bodyLarge.fontWeight,
-                            color = Green600,
-                            modifier = Modifier.fillMaxWidth(),
-                            textAlign = TextAlign.Center
-                        )
-                    }
-                }
-                Spacer(modifier = Modifier.height(16.dp))
+            if (healthNotes.isNotEmpty()) {
+                RecentHealthNotesSection(
+                    healthNotes = healthNotes[0],
+                )
+            } else {
                 Text(
-                    text = "Data terakhir diperbarui 2 jam yang lalu",
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    textAlign = TextAlign.Center,
+                    text = "Belum ada catatan kesehatan",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Gray300,
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center
                 )
             }
         }
@@ -311,5 +248,96 @@ fun HomepageScreen(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun RecentHealthNotesSection(
+    healthNotes: HealthNote,
+) {
+    val dateFormatter = SimpleDateFormat("dd MMM yyyy", Locale("id", "ID"))
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+    ) {
+        Row(
+            Modifier.fillMaxWidth(),
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.outline_trending_up_24),
+                contentDescription = "Calendar Icon",
+                tint = Green600,
+                modifier = Modifier.size(24.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "Status Kesehatan",
+                style = MaterialTheme.typography.titleMedium,
+                fontSize = 20.sp,
+            )
+        }
+        Spacer(modifier = Modifier.height(24.dp))
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .align(Alignment.CenterVertically)
+                    .background(Blue100, shape = RoundedCornerShape(8.dp))
+                    .padding(12.dp)
+                    .fillMaxWidth()
+            ) {
+                Text(
+                    text = "Tekanan Darah",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "${healthNotes.bloodPressure} mmHg",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = MaterialTheme.typography.bodyLarge.fontWeight,
+                    color = Blue600,
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center
+                )
+            }
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .align(Alignment.CenterVertically)
+                    .background(Green100, shape = RoundedCornerShape(8.dp))
+                    .padding(12.dp)
+                    .fillMaxWidth()
+            ) {
+                Text(
+                    text = "Gula Darah",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "${healthNotes.bloodSugar} mg/dL",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = MaterialTheme.typography.bodyLarge.fontWeight,
+                    color = Green600,
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = dateFormatter.format(Date(healthNotes.timestamp)),
+            style = MaterialTheme.typography.bodySmall,
+            modifier = Modifier
+                .fillMaxWidth(),
+            textAlign = TextAlign.Center,
+        )
     }
 }

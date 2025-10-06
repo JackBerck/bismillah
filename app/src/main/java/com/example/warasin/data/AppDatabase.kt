@@ -12,7 +12,7 @@ import com.example.warasin.data.model.Schedule
 
 @Database(
     entities = [Medicine::class, Schedule::class, HealthNote::class],
-    version = 6,
+    version = 7, // Increment version
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -20,11 +20,20 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun healthNoteDao(): HealthNoteDao
 
     companion object {
-        val MIGRATION_1_2 = object : Migration(1, 2) {
+        val MIGRATION_6_7 = object : Migration(6, 7) {
             override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("ALTER TABLE health_notes ADD COLUMN userId TEXT NOT NULL DEFAULT ''")
-                database.execSQL("ALTER TABLE health_notes ADD COLUMN isSynced INTEGER NOT NULL DEFAULT 0")
-                database.execSQL("ALTER TABLE health_notes ADD COLUMN firestoreId TEXT")
+                // Add new columns to medicines table
+                database.execSQL("ALTER TABLE medicines ADD COLUMN userId TEXT NOT NULL DEFAULT ''")
+                database.execSQL("ALTER TABLE medicines ADD COLUMN timestamp INTEGER NOT NULL DEFAULT 0")
+                database.execSQL("ALTER TABLE medicines ADD COLUMN isSynced INTEGER NOT NULL DEFAULT 0")
+                database.execSQL("ALTER TABLE medicines ADD COLUMN firestoreId TEXT")
+
+                // Add new columns to schedules table
+                database.execSQL("ALTER TABLE schedules ADD COLUMN userId TEXT NOT NULL DEFAULT ''")
+                database.execSQL("ALTER TABLE schedules ADD COLUMN timestamp INTEGER NOT NULL DEFAULT 0")
+                database.execSQL("ALTER TABLE schedules ADD COLUMN isSynced INTEGER NOT NULL DEFAULT 0")
+                database.execSQL("ALTER TABLE schedules ADD COLUMN firestoreId TEXT")
+                database.execSQL("ALTER TABLE schedules ADD COLUMN medicineFirestoreId TEXT")
             }
         }
     }

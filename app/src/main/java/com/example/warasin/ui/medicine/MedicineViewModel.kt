@@ -23,9 +23,12 @@ class MedicineViewModel @Inject constructor(
     private val _selectedMedicine = MutableStateFlow<MedicineWithSchedules?>(null)
     val selectedMedicine: StateFlow<MedicineWithSchedules?> = _selectedMedicine.asStateFlow()
 
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
     init {
         loadAllMedicines()
+        syncDataFromFirestore()
     }
 
     private fun loadAllMedicines() {
@@ -40,6 +43,20 @@ class MedicineViewModel @Inject constructor(
         }
     }
 
+    private fun syncDataFromFirestore() {
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                repository.syncAllFromFirestore()
+                repository.syncAllUnsyncedData()
+            } catch (e: Exception) {
+                println("Sync error: ${e.message}")
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
     fun loadMedicineById(id: Int) {
         viewModelScope.launch {
             repository.getMedicineById(id)
@@ -50,8 +67,7 @@ class MedicineViewModel @Inject constructor(
 
     fun addMedicine(name: String, dosage: String, notes: String) {
         viewModelScope.launch {
-            val newMedicine = Medicine(name = name, dosage = dosage, notes = notes)
-            repository.addMedicine(newMedicine)
+            repository.addMedicine(name, dosage, notes)
         }
     }
 
@@ -71,5 +87,9 @@ class MedicineViewModel @Inject constructor(
         viewModelScope.launch {
             repository.deleteMedicine(medicineId)
         }
+    }
+
+    fun refreshData() {
+        syncDataFromFirestore()
     }
 }

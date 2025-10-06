@@ -17,7 +17,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import kotlin.text.toInt
 
 @HiltViewModel
 class ScheduleViewModel @Inject constructor(
@@ -33,18 +32,22 @@ class ScheduleViewModel @Inject constructor(
     private val _selectedSchedule = MutableStateFlow<ScheduleWithMedicine?>(null)
     val selectedSchedule: StateFlow<ScheduleWithMedicine?> = _selectedSchedule.asStateFlow()
 
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
     private val alarmScheduler = AlarmScheduler(context)
 
     init {
         loadAllSchedule()
         loadAllMedicines()
+        syncDataFromFirestore()
     }
 
     private fun loadAllSchedule() {
         viewModelScope.launch {
             repository.getAllSchedules()
                 .catch { exception ->
-                    println("Error loading medicines: ${exception.message}")
+                    println("Error loading schedules: ${exception.message}")
                 }
                 .collect { scheduleList ->
                     _schedules.value = scheduleList
@@ -64,6 +67,20 @@ class ScheduleViewModel @Inject constructor(
         }
     }
 
+    private fun syncDataFromFirestore() {
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                repository.syncAllFromFirestore()
+                repository.syncAllUnsyncedData()
+            } catch (e: Exception) {
+                println("Sync error: ${e.message}")
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
     fun loadScheduleById(id: Int) {
         viewModelScope.launch {
             repository.getScheduleByIdWithMedicine(id)
@@ -74,13 +91,7 @@ class ScheduleViewModel @Inject constructor(
 
     fun addSchedule(medicineId: Int, time: String, selectedDays: List<Int>) {
         viewModelScope.launch {
-            val selectedDaysString = selectedDays.joinToString(",")
-            val newSchedule = Schedule(
-                time = time,
-                medicineId = medicineId,
-                selectedDays = selectedDaysString
-            )
-            val scheduleId = repository.addSchedule(newSchedule)
+            val scheduleId = repository.addSchedule(medicineId, time, selectedDays)
 
             repository.getScheduleByIdWithMedicine(scheduleId.toInt())
                 .collect { scheduleWithMedicine ->
@@ -126,5 +137,9 @@ class ScheduleViewModel @Inject constructor(
                     }
                 }
         }
+    }
+
+    fun refreshData() {
+        syncDataFromFirestore()
     }
 }
