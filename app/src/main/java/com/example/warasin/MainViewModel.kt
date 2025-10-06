@@ -1,5 +1,6 @@
 package com.example.warasin
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.warasin.data.DataStoreRepository
@@ -9,6 +10,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -28,17 +30,37 @@ class MainViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            repository.readOnBoardingState().collect { onboardingCompleted ->
+            // Combine both flows to avoid race condition
+            combine(
+                repository.readOnBoardingState(),
+                repository.readAuthState()
+            ) { onboardingCompleted, isLoggedInDataStore ->
+
+                Log.d("MainViewModel", "=== APP STARTUP CHECK ===")
+                Log.d("MainViewModel", "Onboarding completed: $onboardingCompleted")
+                Log.d("MainViewModel", "DataStore logged in: $isLoggedInDataStore")
+
+                // Double check dengan Firebase dan SharedPreferences
                 val isAuthenticated = authRepository.checkAuthState()
+                Log.d("MainViewModel", "Final auth state: $isAuthenticated")
 
                 val startDestination = when {
-                    !onboardingCompleted -> Graph.ONBOARDING
-                    !isAuthenticated -> Graph.AUTHENTICATION
-                    else -> Graph.ROOT
+                    !onboardingCompleted -> {
+                        Log.d("MainViewModel", "Navigate to: ONBOARDING")
+                        Graph.ONBOARDING
+                    }
+                    !isAuthenticated -> {
+                        Log.d("MainViewModel", "Navigate to: AUTHENTICATION")
+                        Graph.AUTHENTICATION
+                    }
+                    else -> {
+                        Log.d("MainViewModel", "Navigate to: ROOT")
+                        Graph.ROOT
+                    }
                 }
 
                 _uiState.value = MainActivityUiState.Success(startDestination)
-            }
+            }.collect { /* Flow sudah di-handle di dalam combine */ }
         }
     }
 }

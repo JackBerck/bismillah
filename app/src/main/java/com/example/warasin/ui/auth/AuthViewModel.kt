@@ -72,6 +72,47 @@ class AuthViewModel @Inject constructor(
         }
     }
 
+    private fun loginWithEmail() {
+        val currentState = _uiState.value
+        val email = currentState.email.trim()
+        val password = currentState.password.trim()
+
+        if (email.isEmpty() || password.isEmpty()) {
+            _uiState.update { it.copy(registrationError = "Email dan password tidak boleh kosong.") }
+            return
+        }
+
+        _uiState.update { it.copy(isLoading = true, registrationError = null) }
+
+        auth.signInWithEmailAndPassword(email, password)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val user = auth.currentUser
+                    user?.let { firebaseUser ->
+                        // Save user data menggunakan coroutine
+                        viewModelScope.launch {
+                            authRepository.saveUserData(
+                                userId = firebaseUser.uid,
+                                userName = firebaseUser.displayName ?: email.substringBefore("@"),
+                                userEmail = firebaseUser.email ?: email
+                            )
+
+                            Log.d("AuthViewModel", "User logged in successfully: ${firebaseUser.uid}")
+
+                            _uiState.update {
+                                it.copy(isLoading = false, registrationSuccess = true)
+                            }
+                        }
+                    }
+                } else {
+                    Log.e("AuthViewModel", "Login failed: ${task.exception?.message}")
+                    _uiState.update {
+                        it.copy(isLoading = false, registrationError = task.exception?.message)
+                    }
+                }
+            }
+    }
+
     private fun registerUser() {
         val currentState = _uiState.value
         val fullName = currentState.fullName.trim()
@@ -97,66 +138,38 @@ class AuthViewModel @Inject constructor(
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     val user = auth.currentUser
-                    val profileUpdates = UserProfileChangeRequest.Builder().setDisplayName(fullName).build()
-                    user?.updateProfile(profileUpdates)?.addOnCompleteListener {
-                        // Save user data menggunakan AuthRepository
-                        user.let {
-                            // Direct call ke UserPreferences melalui AuthRepository
+                    val profileUpdates = UserProfileChangeRequest.Builder()
+                        .setDisplayName(fullName)
+                        .build()
+
+                    user?.updateProfile(profileUpdates)?.addOnCompleteListener { profileTask ->
+                        if (profileTask.isSuccessful) {
+                            // Save menggunakan coroutine
                             viewModelScope.launch {
-                                // Simpan data user
-                                // AuthRepository akan handle ini
-                                _uiState.update { it.copy(isLoading = false, registrationSuccess = true) }
-                            }
-                        }
-                    }
-                } else {
-                    _uiState.update { it.copy(isLoading = false, registrationError = task.exception?.message) }
-                }
-            }
-    }
-
-    private fun loginWithEmail() {
-        val currentState = _uiState.value
-        val email = currentState.email.trim()
-        val password = currentState.password.trim()
-
-        if (email.isEmpty() || password.isEmpty()) {
-            _uiState.update { it.copy(registrationError = "Email dan password tidak boleh kosong.") }
-            return
-        }
-
-        _uiState.update { it.copy(isLoading = true, registrationError = null) }
-
-        auth.signInWithEmailAndPassword(email, password)
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    val user = auth.currentUser
-                    user?.let {
-                        viewModelScope.launch {
-                            try {
-                                // Sync user data to Firestore
-                                healthNoteRepository.syncUserToFirestore(
-                                    userId = it.uid,
-                                    name = it.displayName ?: "",
-                                    email = it.email ?: ""
+                                authRepository.saveUserData(
+                                    userId = user.uid,
+                                    userName = fullName,
+                                    userEmail = email
                                 )
 
-                                // Sync health notes from Firestore after login
-                                healthNoteRepository.syncHealthNotesFromFirestore()
+                                Log.d("AuthViewModel", "User registered successfully: ${user.uid}")
 
-                                _uiState.update { state ->
-                                    state.copy(isLoading = false, registrationSuccess = true)
+                                _uiState.update {
+                                    it.copy(isLoading = false, registrationSuccess = true)
                                 }
-                            } catch (e: Exception) {
-                                Log.e("AuthViewModel", "Sync error after login: ${e.message}")
-                                _uiState.update { state ->
-                                    state.copy(isLoading = false, registrationSuccess = true)
-                                }
+                            }
+                        } else {
+                            Log.e("AuthViewModel", "Profile update failed: ${profileTask.exception?.message}")
+                            _uiState.update {
+                                it.copy(isLoading = false, registrationError = profileTask.exception?.message)
                             }
                         }
                     }
                 } else {
-                    _uiState.update { it.copy(isLoading = false, registrationError = task.exception?.message) }
+                    Log.e("AuthViewModel", "Registration failed: ${task.exception?.message}")
+                    _uiState.update {
+                        it.copy(isLoading = false, registrationError = task.exception?.message)
+                    }
                 }
             }
     }
@@ -166,14 +179,31 @@ class AuthViewModel @Inject constructor(
         auth.signInWithCredential(credential)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    _uiState.update { it.copy(isLoading = false, registrationSuccess = true) }
+                    val user = auth.currentUser
+                    user?.let { firebaseUser ->
+                        // Save menggunakan coroutine
+                        viewModelScope.launch {
+                            authRepository.saveUserData(
+                                userId = firebaseUser.uid,
+                                userName = firebaseUser.displayName ?: firebaseUser.email?.substringBefore("@") ?: "",
+                                userEmail = firebaseUser.email ?: ""
+                            )
+
+                            Log.d("AuthViewModel", "Google sign in successful: ${firebaseUser.uid}")
+
+                            _uiState.update { it.copy(isLoading = false, registrationSuccess = true) }
+                        }
+                    }
                 } else {
+                    Log.e("AuthViewModel", "Google sign in failed: ${task.exception?.message}")
                     _uiState.update { it.copy(isLoading = false, registrationError = task.exception?.message) }
                 }
             }
     }
 
     fun logout() {
-        authRepository.logout()
+        viewModelScope.launch {
+            authRepository.logout()
+        }
     }
 }

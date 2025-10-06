@@ -33,6 +33,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.warasin.ui.component.ButtonWithoutIcon
 import com.example.warasin.ui.theme.WarasInTheme
 import kotlinx.coroutines.launch
@@ -40,7 +41,8 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun OnboardingScreen(
-    onFinishClick: () -> Unit
+    onFinishClick: () -> Unit,
+    viewModel: OnboardingViewModel = hiltViewModel()
 ) {
     val pages = listOf(
         OnboardingPage.FirstPages,
@@ -49,18 +51,19 @@ fun OnboardingScreen(
     )
     val pagerState = rememberPagerState(pageCount = { pages.size })
 
-    // Gunakan Box sebagai root untuk menumpuk elemen
-    Box(modifier = Modifier.fillMaxSize()) {
+    val handleFinish = {
+        viewModel.saveOnBoardingState(completed = true)
+        onFinishClick()
+    }
 
-        // 1. Pager untuk konten utama
+    Box(modifier = Modifier.fillMaxSize()) {
         HorizontalPager(
             state = pagerState,
-            modifier = Modifier.fillMaxSize() // Pager mengisi seluruh Box
+            modifier = Modifier.fillMaxSize()
         ) { pageIndex ->
             PagerContent(onboardingPage = pages[pageIndex])
         }
 
-        // 2. Tombol Skip di kanan atas
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -70,7 +73,7 @@ fun OnboardingScreen(
         ) {
             AnimatedVisibility(visible = pagerState.currentPage < pagerState.pageCount - 1) {
                 TextButton(
-                    onClick = onFinishClick,
+                    onClick = handleFinish,
                     modifier = Modifier.padding(8.dp)
                 ) {
                     Text("Skip", color = MaterialTheme.colorScheme.primary)
@@ -78,22 +81,21 @@ fun OnboardingScreen(
             }
         }
 
-        // 3. Kelompokkan Indikator dan Tombol Bawah dalam satu Column
         Column(
             modifier = Modifier
-                .align(Alignment.BottomCenter) // Letakkan di bagian bawah Box
+                .align(Alignment.BottomCenter)
                 .fillMaxWidth()
-                .navigationBarsPadding() // Tambahkan padding agar tidak tertutup navigasi sistem
+                .navigationBarsPadding()
                 .padding(horizontal = 40.dp, vertical = 20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             HorizontalPagerIndicator(
                 pagerState = pagerState
             )
-            Spacer(modifier = Modifier.height(20.dp)) // Jarak antara indikator dan tombol
+            Spacer(modifier = Modifier.height(20.dp))
             BottomButtons(
                 pagerState = pagerState,
-                onGetStartedClick = onFinishClick
+                onGetStartedClick = handleFinish
             )
         }
     }

@@ -2,6 +2,7 @@ package com.example.warasin.data.preferences
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.util.Log
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -26,13 +27,32 @@ class UserPreferences @Inject constructor(
     }
 
     fun saveUserData(userId: String, userName: String, userEmail: String) {
+        Log.d("UserPreferences", "Saving user data - ID: $userId, Name: $userName, Email: $userEmail")
         prefs.edit().apply {
             putBoolean(KEY_IS_LOGGED_IN, true)
             putString(KEY_USER_ID, userId)
             putString(KEY_USER_NAME, userName)
             putString(KEY_USER_EMAIL, userEmail)
-            apply()
+            apply() // Pastikan menggunakan apply() bukan commit()
         }
+        Log.d("UserPreferences", "User data saved successfully")
+    }
+
+    fun clearUserData() {
+        Log.d("UserPreferences", "Clearing user data")
+        prefs.edit().clear().apply()
+        Log.d("UserPreferences", "User data cleared")
+    }
+
+    // Tambah method debug
+    fun debugUserData() {
+        Log.d("UserPreferences", "=== USER DATA DEBUG ===")
+        Log.d("UserPreferences", "Is logged in: ${isLoggedIn()}")
+        Log.d("UserPreferences", "User ID: '${getUserId()}'")
+        Log.d("UserPreferences", "User name: '${getUserName()}'")
+        Log.d("UserPreferences", "User email: '${getUserEmail()}'")
+        Log.d("UserPreferences", "User age: '${getUserAge()}'")
+        Log.d("UserPreferences", "User phone: '${getUserPhoneNumber()}'")
     }
 
     fun updateUserProfile(name: String, age: String, phoneNumber: String, profileImageUri: String) {
@@ -58,8 +78,4 @@ class UserPreferences @Inject constructor(
     fun getUserPhoneNumber(): String = prefs.getString(KEY_USER_PHONE, "") ?: ""
 
     fun getProfileImageUri(): String = prefs.getString(KEY_PROFILE_IMAGE_URI, "") ?: ""
-
-    fun clearUserData() {
-        prefs.edit().clear().apply()
-    }
 }

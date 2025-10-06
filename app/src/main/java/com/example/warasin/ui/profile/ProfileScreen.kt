@@ -48,6 +48,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.warasin.R
@@ -63,7 +64,8 @@ import com.example.warasin.ui.theme.Red600
 @Composable
 fun ProfileScreen(
     onLogout: () -> Unit = {},
-    viewModel: ProfileViewModel = hiltViewModel()
+    viewModel: ProfileViewModel = hiltViewModel(),
+    navController: NavHostController
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -270,7 +272,7 @@ fun ProfileScreen(
                     title = "Keamanan & Privasi",
                     iconResId = R.drawable.outline_shield_24,
                     iconTint = Gray950,
-                    onClick = { /* TODO: Navigate to Security & Privacy */ }
+                    onClick = { navController.navigate("securityprivacy_screen") }
                 )
             }
 
@@ -283,7 +285,7 @@ fun ProfileScreen(
                     title = "Bantuan & Dukungan",
                     iconResId = R.drawable.outline_question_mark_24,
                     iconTint = Gray950,
-                    onClick = { /* TODO: Navigate to Help & Support */ }
+                    onClick = { navController.navigate("helpsupport_screen") }
                 )
             }
 

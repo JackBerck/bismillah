@@ -41,15 +41,32 @@ class ProfileViewModel @Inject constructor(
     }
 
     private fun loadUserProfile() {
-        val (userId, userName, userEmail) = authRepository.getCurrentUserData()
-        _uiState.update {
-            it.copy(
-                name = userPreferences.getUserName(),
-                email = userPreferences.getUserEmail(),
-                age = userPreferences.getUserAge(),
-                phoneNumber = userPreferences.getUserPhoneNumber(),
-                profileImageUri = userPreferences.getProfileImageUri()
-            )
+        viewModelScope.launch {
+            Log.d("ProfileViewModel", "Loading user profile...")
+
+            val (userId, userName, userEmail) = authRepository.getCurrentUserData()
+
+            Log.d("ProfileViewModel", "Loaded data - ID: $userId, Name: $userName, Email: $userEmail")
+
+            _uiState.update {
+                it.copy(
+                    name = userName,
+                    email = userEmail,
+                    age = userPreferences.getUserAge(),
+                    phoneNumber = userPreferences.getUserPhoneNumber(),
+                    profileImageUri = userPreferences.getProfileImageUri()
+                )
+            }
+        }
+    }
+
+    fun logout() {
+        viewModelScope.launch {
+            try {
+                authRepository.logout()
+            } catch (e: Exception) {
+                Log.e("ProfileViewModel", "Logout error: ${e.message}")
+            }
         }
     }
 
@@ -122,15 +139,5 @@ class ProfileViewModel @Inject constructor(
 
     fun clearError() {
         _uiState.update { it.copy(errorMessage = null) }
-    }
-
-    fun logout() {
-        viewModelScope.launch {
-            try {
-                authRepository.logout()
-            } catch (e: Exception) {
-                Log.e("ProfileViewModel", "Logout error: ${e.message}")
-            }
-        }
     }
 }
