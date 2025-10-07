@@ -21,6 +21,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import android.Manifest
+import android.os.Build
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.platform.LocalContext
 import com.example.warasin.R
 import com.example.warasin.ui.theme.Blue600
 import com.example.warasin.ui.theme.Gray50
@@ -38,6 +44,20 @@ import java.util.Calendar
 fun ScheduleScreen(
     viewModel: ScheduleViewModel = hiltViewModel()
 ) {
+    val context = LocalContext.current
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = { isGranted ->
+            if (isGranted) {
+                // Tidak perlu melakukan apa-apa di sini, cukup konfirmasi
+                Toast.makeText(context, "Izin notifikasi diberikan!", Toast.LENGTH_SHORT).show()
+            } else {
+                // Beri tahu pengguna jika mereka menolak
+                Toast.makeText(context, "Tanpa izin, pengingat notifikasi tidak akan muncul.", Toast.LENGTH_LONG).show()
+            }
+        }
+    )
 
     val schedules by viewModel.schedules.collectAsState(emptyList())
     val medicines by viewModel.medicines.collectAsState(emptyList())
@@ -65,7 +85,11 @@ fun ScheduleScreen(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 ButtonWithIcon(
-                    onClick = { showAddDialog = true },
+                    onClick = {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                        }
+                        showAddDialog = true },
                     text = "Tambah",
                     icon = R.drawable.baseline_add_24,
                     backgroundColor = Blue600,
